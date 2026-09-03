@@ -1,0 +1,508 @@
+{
+  "accounts": [
+    {
+      "id": "acc-musaraf-default",
+      "fullName": "MUSARAF OLAWALE ABDULAZEEZ",
+      "phone": "07075817357",
+      "email": "moriobee44@gmail.com",
+      "role": "owner",
+      "ninMasked": "•••••••4821",
+      "loginPasswordHash": "453214118f37a2cca5a05616b23efea8e8b5102260f45389d5846c672a2e62f5",
+      "transactionPinHash": "fd42cae84a07fac91ad012a050fb9649156a289604e13de146c538edefe400c4",
+      "pinSalt": "1788392950149_sr3ltone81k",
+      "failedPinAttempts": 0,
+      "pinLockoutUntil": null,
+      "verificationStatus": "account_active",
+      "verificationLog": {
+        "ninVerifiedAt": 1724800000000,
+        "ninMasked": "•••••••4821",
+        "faceVerifiedAt": 1724800000000,
+        "livenessScore": 99.4,
+        "facialMatchScore": 98.2,
+        "auditReference": "OPAY_BIO_ACTIVE_MASTER",
+        "provider": "NIMC / OPay Identity Verification Gateway"
+      },
+      "accountNumber": "7075817357",
+      "balanceNgn": 134000,
+      "createdAt": 1724800000000,
+      "userProfile": {
+        "name": "MUSARAF",
+        "fullName": "MUSARAF OLAWALE ABDULAZEEZ",
+        "phone": "+2347075817357",
+        "accountNumber": "7075817357",
+        "tier": 3,
+        "tierName": "Tier 3",
+        "dailyLimitNgn": 5000000,
+        "singleMaxNgn": 1000000,
+        "avatarUrl": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=300&auto=format&fit=crop&q=80",
+        "todaySalesNgn": 11300,
+        "savingsBalanceNgn": 33450,
+        "owealthBalanceNgn": 8200,
+        "cashbackPointsNgn": 1490,
+        "isKycVerified": true,
+        "email": "moriobee44@gmail.com",
+        "bvnLinked": true,
+        "ninLinked": true,
+        "role": "owner",
+        "gender": "Male",
+        "dob": "**-**-95",
+        "nickname": "Musaraf",
+        "address": "10 Allen Avenue, Ikeja, Lagos State"
+      },
+      "transactions": [
+        {
+          "id": "tx-svc-1788392875268",
+          "reference": "OPAY2609025P1LTR",
+          "type": "tv",
+          "title": "DStv TV",
+          "description": "DStv TV Payment for +2347075817357",
+          "amountNgn": 2000,
+          "status": "successful",
+          "timestamp": 1788392875268,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "DStv Service",
+            "accountOrPhone": "+2347075817357",
+            "bankName": "DStv"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 134000,
+          "sessionId": "100004178839287526879897861331"
+        },
+        {
+          "id": "tx-sb-1788392873143",
+          "reference": "OPAY260902CGR9IK",
+          "type": "safebox_deposit",
+          "title": "Locked into SafeBox: House Rent 2026",
+          "description": "Locked for 90 days at 22% p.a.",
+          "amountNgn": 2000,
+          "status": "successful",
+          "timestamp": 1788392873143,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay Wallet"
+          },
+          "recipient": {
+            "name": "OPay SafeBox Vault",
+            "accountOrPhone": "plan-1788392873143",
+            "bankName": "OPay SafeBox"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 136000,
+          "sessionId": "100004178839287314383755343070"
+        },
+        {
+          "id": "tx-sb-1788392872216",
+          "reference": "OPAY260902LF0A2D",
+          "type": "safebox_deposit",
+          "title": "Locked into SafeBox: House Rent 2026",
+          "description": "Locked for 90 days at 22% p.a.",
+          "amountNgn": 2000,
+          "status": "successful",
+          "timestamp": 1788392872216,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay Wallet"
+          },
+          "recipient": {
+            "name": "OPay SafeBox Vault",
+            "accountOrPhone": "plan-1788392872216",
+            "bankName": "OPay SafeBox"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 138000,
+          "sessionId": "100004178839287221662892961428"
+        },
+        {
+          "id": "tx-sb-1788392855754",
+          "reference": "OPAY2609025LWHQ3",
+          "type": "safebox_deposit",
+          "title": "Locked into SafeBox: House Rent 2026",
+          "description": "Locked for 90 days at 22% p.a.",
+          "amountNgn": 2000,
+          "status": "successful",
+          "timestamp": 1788392855754,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay Wallet"
+          },
+          "recipient": {
+            "name": "OPay SafeBox Vault",
+            "accountOrPhone": "plan-1788392855754",
+            "bankName": "OPay SafeBox"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 140000,
+          "sessionId": "100004178839285575486927440038"
+        },
+        {
+          "id": "tx-sb-1788392853348",
+          "reference": "OPAY260902VUUEYZ",
+          "type": "safebox_deposit",
+          "title": "Locked into SafeBox: House Rent 2026",
+          "description": "Locked for 90 days at 22% p.a.",
+          "amountNgn": 2000,
+          "status": "successful",
+          "timestamp": 1788392853348,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay Wallet"
+          },
+          "recipient": {
+            "name": "OPay SafeBox Vault",
+            "accountOrPhone": "plan-1788392853348",
+            "bankName": "OPay SafeBox"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 142000,
+          "sessionId": "100004178839285334833617794354"
+        }
+      ],
+      "cards": [
+        {
+          "id": "card-1",
+          "cardType": "Virtual Visa",
+          "cardNumber": "5399 •••• •••• 4821",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "08/29",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 1000000,
+          "colorTheme": "teal"
+        },
+        {
+          "id": "card-2",
+          "cardType": "Physical Verve",
+          "cardNumber": "5061 •••• •••• 1092",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "12/28",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 1000000,
+          "colorTheme": "black"
+        }
+      ],
+      "safeBoxes": [
+        {
+          "id": "plan-1788392873143",
+          "title": "House Rent 2026",
+          "principalNgn": 2000,
+          "interestRateAnnual": 22,
+          "accruedInterestNgn": 0,
+          "lockedUntil": 1796168873143,
+          "autoRenew": false
+        },
+        {
+          "id": "plan-1788392872216",
+          "title": "House Rent 2026",
+          "principalNgn": 2000,
+          "interestRateAnnual": 22,
+          "accruedInterestNgn": 0,
+          "lockedUntil": 1796168872216,
+          "autoRenew": false
+        },
+        {
+          "id": "plan-1788392855754",
+          "title": "House Rent 2026",
+          "principalNgn": 2000,
+          "interestRateAnnual": 22,
+          "accruedInterestNgn": 0,
+          "lockedUntil": 1796168855754,
+          "autoRenew": false
+        },
+        {
+          "id": "plan-1788392853348",
+          "title": "House Rent 2026",
+          "principalNgn": 2000,
+          "interestRateAnnual": 22,
+          "accruedInterestNgn": 0,
+          "lockedUntil": 1796168853348,
+          "autoRenew": false
+        },
+        {
+          "id": "safe-1",
+          "title": "Target Savings - Car Fund",
+          "principalNgn": 15000,
+          "interestRateAnnual": 15,
+          "accruedInterestNgn": 450,
+          "lockedUntil": 1792269251025,
+          "autoRenew": true
+        }
+      ],
+      "activeLoan": {
+        "loanLimitNgn": 500000,
+        "currentBorrowedNgn": 0,
+        "dueDate": 1790973251025,
+        "dailyInterestPercent": 0.1,
+        "status": "eligible"
+      },
+      "notifications": [
+        {
+          "id": "notif-svc-1788392875268",
+          "title": "DStv Payment Successful",
+          "message": "You spent ₦2,000.00 on DStv TV Payment for +2347075817357. Earned ₦40.00 cashback!",
+          "timestamp": 1788392875268,
+          "read": false,
+          "type": "transaction",
+          "transactionId": "tx-svc-1788392875268",
+          "amountNgn": 2000,
+          "status": "successful"
+        },
+        {
+          "id": "notif-sb-1788392873143",
+          "title": "SafeBox Plan Created 🔒",
+          "message": "You locked ₦2,000.00 in \"House Rent 2026\" for 90 days at 22% annual interest.",
+          "timestamp": 1788392873143,
+          "read": false,
+          "type": "promo",
+          "amountNgn": 2000
+        },
+        {
+          "id": "notif-sb-1788392872217",
+          "title": "SafeBox Plan Created 🔒",
+          "message": "You locked ₦2,000.00 in \"House Rent 2026\" for 90 days at 22% annual interest.",
+          "timestamp": 1788392872217,
+          "read": false,
+          "type": "promo",
+          "amountNgn": 2000
+        },
+        {
+          "id": "notif-sb-1788392855755",
+          "title": "SafeBox Plan Created 🔒",
+          "message": "You locked ₦2,000.00 in \"House Rent 2026\" for 90 days at 22% annual interest.",
+          "timestamp": 1788392855755,
+          "read": false,
+          "type": "promo",
+          "amountNgn": 2000
+        },
+        {
+          "id": "notif-sb-1788392853375",
+          "title": "SafeBox Plan Created 🔒",
+          "message": "You locked ₦2,000.00 in \"House Rent 2026\" for 90 days at 22% annual interest.",
+          "timestamp": 1788392853375,
+          "read": false,
+          "type": "promo",
+          "amountNgn": 2000
+        }
+      ],
+      "passwordSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
+      "mustResetPassword": false
+    },
+    {
+      "id": "acc-lateefat-user-b",
+      "fullName": "LATEEFAT OMOBUKOLA BABATUNDE",
+      "phone": "07033529224",
+      "email": "lateefat.omobukola@gmail.com",
+      "ninMasked": "•••••••7192",
+      "loginPasswordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+      "transactionPinHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "pinSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
+      "failedPinAttempts": 0,
+      "pinLockoutUntil": null,
+      "verificationStatus": "account_active",
+      "verificationLog": {
+        "ninVerifiedAt": 1724800000000,
+        "ninMasked": "•••••••7192",
+        "faceVerifiedAt": 1724800000000,
+        "livenessScore": 99.1,
+        "facialMatchScore": 98.4,
+        "auditReference": "OPAY_BIO_ACTIVE_USER_B",
+        "provider": "NIMC / OPay Identity Verification Gateway"
+      },
+      "accountNumber": "7033529224",
+      "balanceNgn": 25450,
+      "createdAt": 1724800000000,
+      "userProfile": {
+        "name": "LATEEFAT",
+        "fullName": "LATEEFAT OMOBUKOLA BABATUNDE",
+        "phone": "+2347033529224",
+        "accountNumber": "7033529224",
+        "tier": 3,
+        "tierName": "Tier 3",
+        "dailyLimitNgn": 5000000,
+        "singleMaxNgn": 1000000,
+        "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+        "todaySalesNgn": 0,
+        "savingsBalanceNgn": 15000,
+        "owealthBalanceNgn": 25450,
+        "cashbackPointsNgn": 120,
+        "isKycVerified": true,
+        "email": "lateefat.omobukola@gmail.com",
+        "bvnLinked": true,
+        "ninLinked": true,
+        "gender": "Female",
+        "dob": "**-**-18",
+        "nickname": "Lateefat",
+        "address": "12 Victoria Island, Lagos"
+      },
+      "transactions": [],
+      "cards": [
+        {
+          "id": "card-1",
+          "cardType": "Virtual Visa",
+          "cardNumber": "5399 •••• •••• 4821",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "08/29",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 500000,
+          "colorTheme": "teal"
+        },
+        {
+          "id": "card-2",
+          "cardType": "Physical Verve",
+          "cardNumber": "5061 •••• •••• 1092",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "12/28",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 1000000,
+          "colorTheme": "black"
+        }
+      ],
+      "safeBoxes": [
+        {
+          "id": "safe-1",
+          "title": "Target Savings - Car Fund",
+          "principalNgn": 15000,
+          "interestRateAnnual": 15,
+          "accruedInterestNgn": 450,
+          "lockedUntil": 1792269251025,
+          "autoRenew": true
+        }
+      ],
+      "activeLoan": {
+        "loanLimitNgn": 500000,
+        "currentBorrowedNgn": 0,
+        "dueDate": 1790973251025,
+        "dailyInterestPercent": 0.1,
+        "status": "eligible"
+      },
+      "notifications": []
+    },
+    {
+      "id": "acc-funmilayo-user-c",
+      "fullName": "FUNMILAYO ADENEKAN",
+      "phone": "09125856006",
+      "email": "funmilayo.adenekan@gmail.com",
+      "ninMasked": "•••••••5531",
+      "loginPasswordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+      "transactionPinHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "pinSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
+      "failedPinAttempts": 0,
+      "pinLockoutUntil": null,
+      "verificationStatus": "account_active",
+      "verificationLog": {
+        "ninVerifiedAt": 1724800000000,
+        "ninMasked": "•••••••5531",
+        "faceVerifiedAt": 1724800000000,
+        "livenessScore": 99,
+        "facialMatchScore": 97.9,
+        "auditReference": "OPAY_BIO_ACTIVE_USER_C",
+        "provider": "NIMC / OPay Identity Verification Gateway"
+      },
+      "accountNumber": "9125856006",
+      "balanceNgn": 18200,
+      "createdAt": 1724800000000,
+      "userProfile": {
+        "name": "FUNMILAYO",
+        "fullName": "FUNMILAYO ADENEKAN",
+        "phone": "+2349125856006",
+        "accountNumber": "9125856006",
+        "tier": 3,
+        "tierName": "Tier 3",
+        "dailyLimitNgn": 5000000,
+        "singleMaxNgn": 1000000,
+        "avatarUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80",
+        "todaySalesNgn": 0,
+        "savingsBalanceNgn": 10000,
+        "owealthBalanceNgn": 18200,
+        "cashbackPointsNgn": 90,
+        "isKycVerified": true,
+        "email": "funmilayo.adenekan@gmail.com",
+        "bvnLinked": true,
+        "ninLinked": true,
+        "gender": "Female",
+        "dob": "**-**-22",
+        "nickname": "Funmi",
+        "address": "5 Ikeja GRA, Lagos"
+      },
+      "transactions": [],
+      "cards": [
+        {
+          "id": "card-1",
+          "cardType": "Virtual Visa",
+          "cardNumber": "5399 •••• •••• 4821",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "08/29",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 500000,
+          "colorTheme": "teal"
+        },
+        {
+          "id": "card-2",
+          "cardType": "Physical Verve",
+          "cardNumber": "5061 •••• •••• 1092",
+          "cardHolder": "MUSARAF OLAWALE ABDULAZEEZ",
+          "expiryDate": "12/28",
+          "cvv": "•••",
+          "isFrozen": false,
+          "isOnlineEnabled": true,
+          "isAtmEnabled": true,
+          "isPosEnabled": true,
+          "dailySpendLimit": 1000000,
+          "colorTheme": "black"
+        }
+      ],
+      "safeBoxes": [
+        {
+          "id": "safe-1",
+          "title": "Target Savings - Car Fund",
+          "principalNgn": 15000,
+          "interestRateAnnual": 15,
+          "accruedInterestNgn": 450,
+          "lockedUntil": 1792269251025,
+          "autoRenew": true
+        }
+      ],
+      "activeLoan": {
+        "loanLimitNgn": 500000,
+        "currentBorrowedNgn": 0,
+        "dueDate": 1790973251025,
+        "dailyInterestPercent": 0.1,
+        "status": "eligible"
+      },
+      "notifications": []
+    }
+  ],
+  "processedBscTxIds": []
+}
