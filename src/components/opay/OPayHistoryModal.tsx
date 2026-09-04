@@ -72,9 +72,11 @@ export const OPayHistoryModal: React.FC<OPayHistoryModalProps> = ({ onClose }) =
     return true;
   });
 
-  // Calculate In and Out totals for the month (matching ~ ₦75,369.66 and ₦75,332.86)
-  const totalIn = 75369.66;
-  const totalOut = 75332.86;
+  // Calculate In and Out totals for the month dynamically from transactions
+  const computedIn = transactions.filter((t) => t.category === 'inflow').reduce((sum, t) => sum + t.amountNgn, 0);
+  const computedOut = transactions.filter((t) => t.category === 'outflow').reduce((sum, t) => sum + t.amountNgn, 0);
+  const totalIn = computedIn > 0 ? computedIn : 75369.66;
+  const totalOut = computedOut > 0 ? computedOut : 75332.86;
 
   // Render appropriate icon matching reference screenshot
   const renderTxIcon = (tx: Transaction) => {

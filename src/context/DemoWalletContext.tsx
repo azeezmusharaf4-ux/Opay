@@ -111,9 +111,10 @@ interface DemoWalletContextType {
   }) => Promise<Transaction>;
 
   addMoneyToWallet: (params: {
-    method: 'bank_transfer' | 'debit_card' | 'ussd';
+    method: 'bank_transfer' | 'debit_card' | 'ussd' | 'paystack';
     amountNgn: number;
     sourceDetails?: string;
+    reference?: string;
   }) => Promise<Transaction>;
 
   lockInSafeBox: (title: string, amountNgn: number, durationDays: number) => Promise<boolean>;
@@ -1024,15 +1025,41 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const [lastSentSms, setLastSentSms] = useState<SmsNotificationLog | null>(null);
 
-  // Available Balance exact seed: ₦40.86 from screenshot
-  const [opayBalance, setOpayBalance] = useState<number>(40.86);
+  // Initialize state directly from locally saved active account to prevent any balance/transaction reset on reload
+  const initialActiveAccount = (() => {
+    try {
+      const activeId = localStorage.getItem(ACTIVE_ACCOUNT_KEY) || DEFAULT_MASTER_ACCOUNT.id;
+      const savedAccounts = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      if (savedAccounts) {
+        const parsed = JSON.parse(savedAccounts);
+        if (Array.isArray(parsed)) {
+          const found = parsed.find((a: RegisteredUserAccount) => a.id === activeId);
+          if (found) return found;
+        }
+      }
+      return DEFAULT_MASTER_ACCOUNT;
+    } catch {
+      return DEFAULT_MASTER_ACCOUNT;
+    }
+  })();
+
+  const [opayBalance, setOpayBalance] = useState<number>(() => {
+    return typeof initialActiveAccount.balanceNgn === 'number'
+      ? initialActiveAccount.balanceNgn
+      : DEFAULT_MASTER_ACCOUNT.balanceNgn;
+  });
   const [isBalanceHidden, setIsBalanceHidden] = useState<boolean>(false);
-  const [userProfile, setUserProfile] = useState<OPayUserProfile>(DEFAULT_USER_PROFILE);
-  const [cards, setCards] = useState<OPayDebitCard[]>(DEFAULT_CARDS);
-  const [safeBoxes, setSafeBoxes] = useState<SafeBoxPlan[]>(DEFAULT_SAFEBOXES);
-  const [activeLoan, setActiveLoan] = useState<ActiveLoan>(DEFAULT_LOAN);
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
-  const [notifications, setNotifications] = useState<DemoNotification[]>(generateSeedNotifications());
+  const [userProfile, setUserProfile] = useState<OPayUserProfile>(() => initialActiveAccount.userProfile || DEFAULT_USER_PROFILE);
+  const [cards, setCards] = useState<OPayDebitCard[]>(() => initialActiveAccount.cards || DEFAULT_CARDS);
+  const [safeBoxes, setSafeBoxes] = useState<SafeBoxPlan[]>(() => initialActiveAccount.safeBoxes || DEFAULT_SAFEBOXES);
+  const [activeLoan, setActiveLoan] = useState<ActiveLoan>(() => initialActiveAccount.activeLoan || DEFAULT_LOAN);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    if (Array.isArray(initialActiveAccount.transactions) && initialActiveAccount.transactions.length > 0) {
+      return initialActiveAccount.transactions;
+    }
+    return DEFAULT_MASTER_ACCOUNT.transactions || INITIAL_TRANSACTIONS;
+  });
+  const [notifications, setNotifications] = useState<DemoNotification[]>(() => initialActiveAccount.notifications || generateSeedNotifications());
   const [activeToast, setActiveToast] = useState<DemoNotification | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const isInitialServerLoaded = useRef(false);
@@ -1049,11 +1076,37 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
             delete copy.password;
             return copy;
           });
-          setRegisteredAccounts(sanitized);
+
+          setRegisteredAccounts(prev => {
+            const accountMap = new Map<string, RegisteredUserAccount>();
+            for (const localAcc of prev) {
+              accountMap.set(localAcc.id, localAcc);
+            }
+            for (const serverAcc of sanitized) {
+              const existing = accountMap.get(serverAcc.id);
+              if (existing) {
+                const txMap = new Map<string, Transaction>();
+                for (const t of (existing.transactions || [])) if (t?.id) txMap.set(t.id, t);
+                for (const t of (serverAcc.transactions || [])) if (t?.id) txMap.set(t.id, t);
+                const mergedTxs = Array.from(txMap.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                accountMap.set(serverAcc.id, {
+                  ...existing,
+                  ...serverAcc,
+                  balanceNgn: serverAcc.balanceNgn ?? existing.balanceNgn,
+                  transactions: mergedTxs,
+                });
+              } else {
+                accountMap.set(serverAcc.id, serverAcc);
+              }
+            }
+            return Array.from(accountMap.values());
+          });
+
           isInitialServerLoaded.current = true;
           try {
             localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(sanitized));
           } catch {}
+
           if (currentAccountId) {
             const current = sanitized.find((a: RegisteredUserAccount) => a.id === currentAccountId);
             if (current) {
@@ -1062,7 +1115,12 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
               setCards(current.cards || DEFAULT_CARDS);
               setSafeBoxes(current.safeBoxes || []);
               setActiveLoan(current.activeLoan || DEFAULT_LOAN);
-              setTransactions(current.transactions || []);
+              setTransactions(prevTxs => {
+                const txMap = new Map<string, Transaction>();
+                for (const t of prevTxs) if (t?.id) txMap.set(t.id, t);
+                for (const t of (current.transactions || [])) if (t?.id) txMap.set(t.id, t);
+                return Array.from(txMap.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+              });
               setNotifications(current.notifications || []);
             }
           }
@@ -1922,49 +1980,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
   // Helper to normalize phone / account numbers for matching
   const normalizeIdentifier = (val?: string) => (val || '').replace(/\D/g, '').replace(/^0+/, '');
 
-  // Periodic 1-Hour Ephemeral Network Routing Token Expiration Cleaner
-  useEffect(() => {
-    const checkNetworkRoutingExpiration = () => {
-      const now = Date.now();
-      setTransactions(prev => {
-        let changed = false;
-        const updated = prev.map(tx => {
-          if (tx.networkExpiresAt && now > tx.networkExpiresAt && !tx.networkSessionDeleted) {
-            changed = true;
-            return { ...tx, networkSessionDeleted: true };
-          }
-          return tx;
-        });
-        return changed ? updated : prev;
-      });
-
-      setRegisteredAccounts(prev => {
-        let changed = false;
-        const updated = prev.map(acc => {
-          const accTxs = acc.transactions || [];
-          let accChanged = false;
-          const updatedTxs = accTxs.map(tx => {
-            if (tx.networkExpiresAt && now > tx.networkExpiresAt && !tx.networkSessionDeleted) {
-              accChanged = true;
-              return { ...tx, networkSessionDeleted: true };
-            }
-            return tx;
-          });
-          if (accChanged) {
-            changed = true;
-            return { ...acc, transactions: updatedTxs };
-          }
-          return acc;
-        });
-        return changed ? updated : prev;
-      });
-    };
-
-    checkNetworkRoutingExpiration();
-    const timer = setInterval(checkNetworkRoutingExpiration, 10000);
-    return () => clearInterval(timer);
-  }, []);
-
+  // Transactions are permanent financial records and are never automatically deleted or expired
   const currentUser = registeredAccounts.find(a => a.id === currentAccountId) || null;
 
   // 5. Send OPay Transfer
@@ -2599,35 +2615,37 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // 5. Add Money To Wallet
   const addMoneyToWallet = async (params: {
-    method: 'bank_transfer' | 'debit_card' | 'ussd';
+    method: 'bank_transfer' | 'debit_card' | 'ussd' | 'paystack';
     amountNgn: number;
     sourceDetails?: string;
+    reference?: string;
   }): Promise<Transaction> => {
-    const { method, amountNgn, sourceDetails } = params;
+    const { method, amountNgn, sourceDetails, reference } = params;
 
     const newBalance = opayBalance + amountNgn;
     setOpayBalance(newBalance);
 
     const txId = `tx-topup-${Date.now()}`;
-    const methodNames = {
+    const methodNames: Record<string, string> = {
       bank_transfer: 'Bank Transfer Top-up',
       debit_card: 'Debit Card Instant Top-up',
       ussd: 'USSD Fast Deposit',
+      paystack: 'Paystack Instant Top-up',
     };
 
     const newTx: Transaction = {
       id: txId,
-      reference: generateReference(),
+      reference: reference || generateReference(),
       type: 'deposit',
-      title: methodNames[method],
-      description: sourceDetails || `Top-up via ${methodNames[method]}`,
+      title: methodNames[method] || 'Wallet Top-up',
+      description: sourceDetails || `Top-up via ${methodNames[method] || 'Paystack'}`,
       amountNgn,
       status: 'successful',
       timestamp: Date.now(),
       sender: {
-        name: sourceDetails || 'Linked Bank Card / External Account',
-        accountOrPhone: 'TOPUP-EXT',
-        bankName: 'Commercial Bank',
+        name: method === 'paystack' ? 'Paystack Payment Gateway' : (sourceDetails || 'Linked Bank Card / External Account'),
+        accountOrPhone: method === 'paystack' ? 'PAYSTACK-NG' : 'TOPUP-EXT',
+        bankName: method === 'paystack' ? 'Paystack Secure Gateway' : 'Commercial Bank',
       },
       recipient: {
         name: userProfile.fullName,
@@ -2641,6 +2659,19 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     };
 
     setTransactions(prev => [newTx, ...prev]);
+
+    // Persist immediately to active account in storage & server
+    if (currentAccountId) {
+      fetch('/api/accounts/sync-single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: currentAccountId,
+          balanceNgn: newBalance,
+          transactions: [newTx],
+        }),
+      }).catch(() => {});
+    }
 
     if (soundEnabled) soundManager.playSuccessSound();
 
@@ -2658,7 +2689,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     const notif: DemoNotification = {
       id: `notif-top-${Date.now()}`,
       title: 'Credit Alert (Wallet Top-Up)',
-      message: `Your OPay account was credited with +${formatNgn(amountNgn)} via ${methodNames[method]}. Balance: ${formatNgn(newBalance)}.`,
+      message: `Your OPay account was credited with +${formatNgn(amountNgn)} via ${methodNames[method] || 'Paystack'}. Balance: ${formatNgn(newBalance)}.`,
       timestamp: Date.now(),
       read: false,
       type: 'transaction',

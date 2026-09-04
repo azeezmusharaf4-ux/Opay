@@ -23,7 +23,7 @@
         "provider": "NIMC / OPay Identity Verification Gateway"
       },
       "accountNumber": "7075817357",
-      "balanceNgn": 134000,
+      "balanceNgn": 123900,
       "createdAt": 1724800000000,
       "userProfile": {
         "name": "MUSARAF",
@@ -50,6 +50,68 @@
         "address": "10 Allen Avenue, Ikeja, Lagos State"
       },
       "transactions": [
+        {
+          "id": "tx-op-1788393360902",
+          "reference": "OPAY2609026WDV4V",
+          "type": "op_transfer",
+          "title": "Transfer to FUNMILAYO ADENEKAN",
+          "description": "Transfer to OPay User (9125856006)",
+          "amountNgn": 100,
+          "status": "successful",
+          "timestamp": 1788393360902,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "FUNMILAYO ADENEKAN",
+            "accountOrPhone": "9125856006",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 123900,
+          "sessionId": "100004178839336090289913503520",
+          "networkRoutingSession": "NIP-SW-260902-ENKO",
+          "networkRoutes": [
+            "OPay Core Switch Gateway",
+            "NIBSS Instant Payment (NIP Interbank)",
+            "Interswitch Central Switch",
+            "CBN Settlement Router"
+          ]
+        },
+        {
+          "id": "tx-bank-1788393053647",
+          "reference": "OPAY2609023K028T",
+          "type": "bank_transfer",
+          "title": "Transfer to KHADIJAT SHEHU",
+          "description": "Interbank transfer to 9138764755 (Momo Payment Service Bank)",
+          "amountNgn": 10000,
+          "status": "successful",
+          "timestamp": 1788393053647,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "KHADIJAT SHEHU",
+            "accountOrPhone": "9138764755",
+            "bankName": "Momo Payment Service Bank"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 124000,
+          "sessionId": "100004178839305364791701671435",
+          "networkRoutingSession": "NIP-SW-260902-IBXC",
+          "networkRoutes": [
+            "OPay Core Switch Gateway",
+            "NIBSS Instant Payment (NIP Interbank)",
+            "Interswitch Central Switch",
+            "CBN Settlement Router"
+          ]
+        },
         {
           "id": "tx-svc-1788392875268",
           "reference": "OPAY2609025P1LTR",
