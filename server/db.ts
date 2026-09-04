@@ -79,6 +79,7 @@ const DEFAULT_MASTER_ACCOUNT: RegisteredUserAccount = {
   ninMasked: '•••••••4821',
   password: 'password123',
   loginPasswordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+  customPin: '1234',
   transactionPinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
   pinSalt: 'OPAY_SECURE_NIGERIA_BANKING_SALT_2026',
   failedPinAttempts: 0,
@@ -135,6 +136,7 @@ const DEFAULT_USER_B_ACCOUNT: RegisteredUserAccount = {
   ninMasked: '•••••••7192',
   password: 'password123',
   loginPasswordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+  customPin: '1234',
   transactionPinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
   pinSalt: 'OPAY_SECURE_NIGERIA_BANKING_SALT_2026',
   failedPinAttempts: 0,
@@ -190,6 +192,7 @@ const DEFAULT_USER_C_ACCOUNT: RegisteredUserAccount = {
   ninMasked: '•••••••5531',
   password: 'password123',
   loginPasswordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+  customPin: '1234',
   transactionPinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
   pinSalt: 'OPAY_SECURE_NIGERIA_BANKING_SALT_2026',
   failedPinAttempts: 0,
@@ -393,7 +396,12 @@ class ServerDatabase {
     this.save();
   }
 
-  public updateAccountBalanceAndTransactions(accountId: string, balanceNgn?: number, transactions?: Transaction[]): boolean {
+  public updateAccountBalanceAndTransactions(
+    accountId: string, 
+    balanceNgn?: number, 
+    transactions?: Transaction[],
+    extra?: { customPin?: string; transactionPinHash?: string; pinSalt?: string }
+  ): boolean {
     const account = this.getAccount(accountId);
     if (!account) return false;
     if (typeof balanceNgn === 'number') {
@@ -409,6 +417,15 @@ class ServerDatabase {
         if (t && t.id) txMap.set(t.id, t);
       }
       account.transactions = Array.from(txMap.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    }
+    if (extra?.customPin) {
+      account.customPin = extra.customPin;
+    }
+    if (extra?.transactionPinHash) {
+      account.transactionPinHash = extra.transactionPinHash;
+    }
+    if (extra?.pinSalt) {
+      account.pinSalt = extra.pinSalt;
     }
     this.saveAccount(account);
     return true;
@@ -429,12 +446,15 @@ class ServerDatabase {
     return true;
   }
 
-  public updateAccountPin(accountId: string, newPinHash: string, salt?: string): boolean {
+  public updateAccountPin(accountId: string, newPinHash: string, salt?: string, plainPin?: string): boolean {
     const account = this.getAccount(accountId);
     if (!account) return false;
     account.transactionPinHash = newPinHash;
     if (salt) {
       account.pinSalt = salt;
+    }
+    if (plainPin) {
+      account.customPin = plainPin;
     }
     account.failedPinAttempts = 0;
     account.pinLockoutUntil = null;

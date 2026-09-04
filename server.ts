@@ -586,8 +586,9 @@ async function startServer() {
   // 8B. POST /api/auth/forgot-password/check-phone - Check if phone number belongs to an existing account
   const handleCheckPhone = (req: express.Request, res: express.Response) => {
     try {
-      const { phone } = req.body;
-      if (!phone || typeof phone !== 'string') {
+      const { phone, rawPhone, strippedPhone, internationalPhone } = req.body;
+      const target = phone || rawPhone || strippedPhone || internationalPhone;
+      if (!target || typeof target !== 'string') {
         res.status(400).json({
           success: false,
           exists: false,
@@ -596,8 +597,17 @@ async function startServer() {
         return;
       }
 
-      const cleanInput = phone.trim();
-      const account = serverDb.findAccountByIdentifier(cleanInput);
+      const cleanInput = target.trim();
+      let account = serverDb.findAccountByIdentifier(cleanInput);
+      if (!account && strippedPhone) {
+        account = serverDb.findAccountByIdentifier(strippedPhone);
+      }
+      if (!account && internationalPhone) {
+        account = serverDb.findAccountByIdentifier(internationalPhone);
+      }
+      if (!account && rawPhone) {
+        account = serverDb.findAccountByIdentifier(rawPhone);
+      }
 
       if (!account) {
         res.status(404).json({
@@ -1091,6 +1101,7 @@ async function startServer() {
         return;
       }
 
+      const cleanPin = pin.trim();
       const now = Date.now();
       const userSecurity = pinSecurityMap.get(accountId) || { attempts: 0, lockedUntil: null };
 
@@ -1113,13 +1124,34 @@ async function startServer() {
         userSecurity.lockedUntil = null;
       }
 
-      const effectiveSalt = salt || HASH_SALT_DEFAULT;
-      const inputHash = computeHash(pin.trim(), effectiveSalt);
+      const account = serverDb.getAccount(accountId) || serverDb.findAccountByIdentifier(accountId);
+      const effectivePinHash = account?.transactionPinHash || expectedPinHash;
+      const effectiveSalt = account?.pinSalt || salt || HASH_SALT_DEFAULT;
 
-      // Support master fallback PIN in demo mode if no hash provided
-      const isMatch = expectedPinHash 
-        ? (inputHash === expectedPinHash || pin.trim() === '1234' || pin.trim() === '0000')
-        : (pin.trim() === '1234' || pin.trim() === '0000' || pin.trim() === '123456');
+      // 1. Direct match with user's saved custom PIN (instant & 100% reliable)
+      let isMatch = false;
+      if (account?.customPin && cleanPin === account.customPin) {
+        isMatch = true;
+      }
+
+      // 2. Hash match using salt or default salt
+      if (!isMatch && effectivePinHash) {
+        const inputHash = computeHash(cleanPin, effectiveSalt);
+        const inputHashDefault = computeHash(cleanPin, HASH_SALT_DEFAULT);
+        const inputPlain = crypto.createHash('sha256').update(cleanPin).digest('hex');
+        if (inputHash === effectivePinHash || inputHashDefault === effectivePinHash || inputPlain === effectivePinHash) {
+          isMatch = true;
+        }
+      }
+
+      // 3. Fallback to default demo PIN (1234 or 0000) ONLY IF user has never set a custom PIN
+      if (!isMatch) {
+        const hasCustom = Boolean(account?.customPin);
+        const isDefaultSeed = !hasCustom && (!effectivePinHash || effectivePinHash === '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4');
+        if (isDefaultSeed && (cleanPin === '1234' || cleanPin === '0000')) {
+          isMatch = true;
+        }
+      }
 
       if (isMatch) {
         // Reset security state on success
@@ -1182,6 +1214,7 @@ async function startServer() {
         return;
       }
 
+      const cleanPin = newPin.trim();
       const account = serverDb.getAccount(accountId) || serverDb.findAccountByIdentifier(accountId);
       if (!account) {
         res.status(404).json({ success: false, message: 'Account not found.' });
@@ -1190,15 +1223,16 @@ async function startServer() {
 
       // Allow user to set PIN directly whenever desired without previous PIN prompt
       const newSalt = `${Date.now()}_${Math.random().toString(36).substring(2)}`;
-      const newPinHash = computeHash(newPin.trim(), newSalt);
+      const newPinHash = computeHash(cleanPin, newSalt);
 
-      const updated = serverDb.updateAccountPin(account.id, newPinHash, newSalt);
+      const updated = serverDb.updateAccountPin(account.id, newPinHash, newSalt, cleanPin);
       if (updated) {
         pinSecurityMap.set(account.id, { attempts: 0, lockedUntil: null });
         res.json({
           success: true,
           pinHash: newPinHash,
           pinSalt: newSalt,
+          customPin: cleanPin,
           message: 'Payment PIN set successfully.',
         });
       } else {
@@ -1491,12 +1525,17 @@ async function startServer() {
 
   app.post('/api/accounts/sync-single', (req, res) => {
     try {
-      const { accountId, balanceNgn, transactions } = req.body;
+      const { accountId, balanceNgn, transactions, customPin, transactionPinHash, pinSalt } = req.body;
       if (!accountId) {
         res.status(400).json({ success: false, message: 'Missing accountId' });
         return;
       }
-      const updated = serverDb.updateAccountBalanceAndTransactions(accountId, balanceNgn, transactions);
+      const updated = serverDb.updateAccountBalanceAndTransactions(
+        accountId, 
+        balanceNgn, 
+        transactions, 
+        { customPin, transactionPinHash, pinSalt }
+      );
       if (updated) {
         res.json({ success: true, message: 'Account updated permanently in server database.' });
       } else {
@@ -1785,6 +1824,9 @@ async function startServer() {
       paystack: PaystackService.isConfigured() ? 'connected' : 'not_configured',
     });
   });
+
+  // Serve static assets from public folder (manifest.json, sw.js, icons, etc.)
+  app.use(express.static(path.join(process.cwd(), 'public')));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

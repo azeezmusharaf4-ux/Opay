@@ -20,7 +20,8 @@ import {
   Delete,
   MessageSquare,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  Keyboard
 } from 'lucide-react';
 import { useDemoWallet } from '../../../context/DemoWalletContext';
 import { validatePasswordStrength, validateTransactionPin } from '../../../utils/security';
@@ -88,6 +89,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [welcomeKeypadMode, setWelcomeKeypadMode] = useState<'keypad' | 'native'>('keypad');
+  const [loginInputType, setLoginInputType] = useState<'phone' | 'email'>('phone');
 
   // Forgot Password flow state (Step 1: Phone -> Step 2: New Password -> Step 3: Success)
   const [forgotStep, setForgotStep] = useState<1 | 2 | 3>(1); // 1: Phone, 2: New Password, 3: Success
@@ -173,6 +176,18 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
     setActiveMode('forgot_password');
   };
 
+  // Helper: Normalize Nigerian phone number (handles both 10-digit and 11-digit with leading 0)
+  const normalizeNigerianPhone = (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    // If 11 digits starting with 0 (e.g., 07075817357), strip the leading zero -> 7075817357
+    const stripped10 = digits.startsWith('0') ? digits.slice(1) : digits;
+    const local11 = `0${stripped10}`;
+    const international = `+234${stripped10}`;
+    // Nigerian mobile numbers: 10 digits starting with 7, 8, or 9
+    const isValid = (stripped10.length === 10 && /^[789]\d{9}$/.test(stripped10)) || digits.length === 10 || digits.length === 11;
+    return { digits, stripped10, local11, international, isValid };
+  };
+
   // Step 1: Verify phone number belongs to an existing account
   const handleForgotVerifyPhone = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -185,12 +200,24 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
       return;
     }
 
+    const { stripped10, local11, international, isValid } = normalizeNigerianPhone(cleanInput);
+
+    if (stripped10.length !== 10 && cleanInput.length < 10) {
+      setForgotError('Please enter a valid 10-digit (e.g. 7075817357) or 11-digit (e.g. 07075817357) mobile number.');
+      return;
+    }
+
     setIsForgotLoading(true);
     try {
       const response = await fetch('/api/auth/forgot-password/check-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanInput }),
+        body: JSON.stringify({ 
+          phone: local11,
+          rawPhone: cleanInput,
+          strippedPhone: stripped10,
+          internationalPhone: international,
+        }),
       });
 
       const data = await response.json();
@@ -199,8 +226,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
         return;
       }
 
-      setForgotPhone(data.phone || cleanInput);
-      setForgotMaskedPhone(data.maskedPhone || cleanInput);
+      setForgotPhone(data.phone || local11);
+      setForgotMaskedPhone(data.maskedPhone || `${local11.slice(0, 3)} •••• ${local11.slice(-4)}`);
       setForgotAccountName(data.fullName || '');
       setForgotAccountId(data.accountId || '');
       setForgotStep(2);
@@ -590,20 +617,71 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </div>
                 )}
 
+                {/* Mode Switcher: In-App Keypad vs Native Keyboard */}
+                <div className="flex items-center justify-between pt-1 pb-1">
+                  <span className="text-[11.5px] text-slate-400 font-medium">Input Method:</span>
+                  <div className="flex items-center gap-1 bg-[#14161C] p-0.5 rounded-xl border border-slate-800 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setWelcomeKeypadMode('keypad')}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                        welcomeKeypadMode === 'keypad'
+                          ? 'bg-[#00D589] text-[#072418] shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <KeyRound className="h-3 w-3" />
+                      <span>In-App Pad</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWelcomeKeypadMode('native')}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                        welcomeKeypadMode === 'native'
+                          ? 'bg-[#00D589] text-[#072418] shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Keyboard className="h-3 w-3" />
+                      <span>Phone Keypad (123)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 6-Digit Visual Indicators */}
+                <div className="flex justify-center gap-2.5 py-2">
+                  {[0, 1, 2, 3, 4, 5].map((idx) => (
+                    <div
+                      key={idx}
+                      className={`h-3.5 w-3.5 rounded-full border-2 transition-all ${
+                        welcomePassword.length > idx
+                          ? 'bg-[#00D589] border-[#00D589] scale-110 shadow-sm shadow-[#00D589]/40'
+                          : 'border-slate-600 bg-[#121419]'
+                      }`}
+                    />
+                  ))}
+                </div>
+
                 {/* 3. Password Input Field matching IMG_2489 */}
                 <form onSubmit={handleWelcomeSubmit} className="space-y-3">
                   <div className="space-y-1">
                     <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors p-1">
                       <input
                         type={showWelcomePassword ? 'text' : 'password'}
-                        autoFocus
+                        inputMode={welcomeKeypadMode === 'keypad' ? 'none' : 'numeric'}
+                        pattern="[0-9]*"
+                        autoComplete="current-password"
+                        enterKeyHint="done"
+                        maxLength={6}
+                        autoFocus={welcomeKeypadMode === 'native'}
                         value={welcomePassword}
                         onChange={(e) => {
-                          setWelcomePassword(e.target.value);
+                          const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setWelcomePassword(clean);
                           setLoginError(null);
                         }}
-                        placeholder="Enter your password"
-                        className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none tracking-widest font-mono"
+                        placeholder="Enter 6-digit password"
+                        className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none tracking-widest font-mono text-center"
                       />
                       <button
                         type="button"
@@ -637,8 +715,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   {/* 4. Green Pill Button: Log in */}
                   <button
                     type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full rounded-full bg-[#00D589] py-4 text-sm font-black text-[#072418] hover:bg-[#00E599] active:scale-[0.99] transition-all shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 cursor-pointer mt-4"
+                    disabled={isLoggingIn || welcomePassword.length < 6}
+                    className="w-full rounded-full bg-[#00D589] py-4 text-sm font-black text-[#072418] hover:bg-[#00E599] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] transition-all shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 cursor-pointer mt-3"
                   >
                     {isLoggingIn ? (
                       <span>Logging in...</span>
@@ -648,21 +726,23 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </button>
                 </form>
 
-                {/* Touch Keypad for mobile/desktop convenience */}
-                <div className="pt-2">
-                  <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => handleKeypadPress(key)}
-                        className="h-11 rounded-xl bg-[#1D212A] hover:bg-slate-700/80 active:scale-95 text-white font-bold text-base transition-colors flex items-center justify-center shadow-sm"
-                      >
-                        {key === '⌫' ? <Delete className="h-4 w-4 text-slate-300" /> : key}
-                      </button>
-                    ))}
+                {/* Touch Keypad for In-App Pad mode */}
+                {welcomeKeypadMode === 'keypad' && (
+                  <div className="pt-2 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                      {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleKeypadPress(key)}
+                          className="h-11 rounded-xl bg-[#1D212A] hover:bg-slate-700/80 active:scale-95 text-white font-bold text-base transition-colors flex items-center justify-center shadow-sm cursor-pointer select-none"
+                        >
+                          {key === '⌫' ? <Delete className="h-4 w-4 text-slate-300" /> : key}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Regulatory Footer */}
@@ -710,20 +790,45 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                 {loginStep === 1 && (
                   <form onSubmit={handleFullLoginNext} className="space-y-5">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-300">
-                        Enter your Mobile No./Email
-                      </label>
+                      <div className="flex items-center justify-between pb-1">
+                        <label className="text-xs font-semibold text-slate-300">
+                          Enter your Mobile No./Email
+                        </label>
+                        <div className="flex items-center gap-1 bg-[#14161C] p-0.5 rounded-lg border border-slate-800 text-[10.5px]">
+                          <button
+                            type="button"
+                            onClick={() => setLoginInputType('phone')}
+                            className={`px-2 py-0.5 rounded-md font-semibold transition-colors cursor-pointer ${
+                              loginInputType === 'phone' ? 'bg-[#00D589] text-[#072418]' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            Phone (123)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLoginInputType('email')}
+                            className={`px-2 py-0.5 rounded-md font-semibold transition-colors cursor-pointer ${
+                              loginInputType === 'email' ? 'bg-[#00D589] text-[#072418]' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            Email (ABC)
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors">
                         <input
-                          type="text"
+                          type={loginInputType === 'phone' ? 'tel' : 'email'}
+                          inputMode={loginInputType === 'phone' ? 'tel' : 'email'}
+                          pattern={loginInputType === 'phone' ? '[0-9]*' : undefined}
                           autoFocus
                           value={loginIdentifier}
                           onChange={(e) => {
                             setLoginIdentifier(e.target.value);
                             setLoginError(null);
                           }}
-                          placeholder="e.g. 07075817357"
-                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-medium"
+                          placeholder={loginInputType === 'phone' ? 'e.g. 07075817357' : 'name@email.com'}
+                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-medium font-mono"
                         />
                       </div>
 
@@ -784,14 +889,19 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                       <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors">
                         <input
                           type={showLoginPassword ? 'text' : 'password'}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={6}
+                          enterKeyHint="done"
                           autoFocus
                           value={loginPassword}
                           onChange={(e) => {
-                            setLoginPassword(e.target.value);
+                            const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setLoginPassword(clean);
                             setLoginError(null);
                           }}
-                          placeholder="Enter your password"
-                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none"
+                          placeholder="Enter 6-digit password"
+                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-mono"
                         />
                         <button
                           type="button"
@@ -887,6 +997,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                     </label>
                     <input
                       type="tel"
+                      inputMode="tel"
+                      pattern="[0-9]*"
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
                       placeholder="08012345678"
@@ -901,6 +1013,7 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                     </label>
                     <input
                       type="email"
+                      inputMode="email"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="name@email.com"
@@ -917,6 +1030,9 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </label>
                   <input
                     type={showRegNin ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={11}
                     value={regNin}
                     onChange={(e) => setRegNin(e.target.value.replace(/\D/g, '').slice(0, 11))}
                     placeholder="Enter 11-digit NIN"
@@ -932,10 +1048,13 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </label>
                   <input
                     type={showRegPassword ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Create login password"
-                    className="w-full rounded-xl bg-[#1A1D24] p-3 text-sm text-white border border-slate-700 focus:border-[#00D589] focus:outline-none placeholder-slate-500"
+                    placeholder="Create 6-digit login password"
+                    className="w-full rounded-xl bg-[#1A1D24] p-3 text-sm text-white border border-slate-700 focus:border-[#00D589] focus:outline-none placeholder-slate-500 font-mono"
                     required
                   />
                 </div>
@@ -948,6 +1067,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength={4}
                       value={regPin}
                       onChange={(e) => setRegPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -957,6 +1078,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                     />
                     <input
                       type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength={4}
                       value={regPinConfirm}
                       onChange={(e) => setRegPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -1034,7 +1157,7 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
 
                 {/* STEP 1: Phone Number Input */}
                 {forgotStep === 1 && (
-                  <form onSubmit={handleForgotVerifyPhone} className="space-y-4">
+                  <form onSubmit={handleForgotVerifyPhone} className="space-y-4" noValidate>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-300">
                         Registered Mobile Number
@@ -1045,18 +1168,22 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                         </div>
                         <input
                           type="tel"
+                          inputMode="tel"
+                          pattern="[0-9]*"
                           autoFocus
                           value={forgotPhone}
                           onChange={(e) => {
-                            setForgotPhone(e.target.value);
+                            const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            setForgotPhone(digitsOnly);
                             setForgotError(null);
                           }}
-                          placeholder="e.g. 07075817357"
+                          placeholder="e.g. 07075817357 or 7075817357"
+                          title="Enter a 10-digit (e.g. 7075817357) or 11-digit (e.g. 07075817357) Nigerian mobile number"
                           className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-mono"
                         />
                       </div>
                       <p className="text-[11px] text-slate-400 pt-1">
-                        We will verify that this phone number belongs to an existing OPay account.
+                        Enter either 10 digits or 11 digits starting with 0 (e.g. 07075817357).
                       </p>
                     </div>
 
@@ -1127,14 +1254,18 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                       <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors">
                         <input
                           type={showForgotNewPassword ? 'text' : 'password'}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={6}
                           autoFocus
                           value={forgotNewPassword}
                           onChange={(e) => {
-                            setForgotNewPassword(e.target.value);
+                            const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setForgotNewPassword(clean);
                             setForgotError(null);
                           }}
                           placeholder="Enter new 6-digit password"
-                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none"
+                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-mono"
                         />
                         <button
                           type="button"
@@ -1153,13 +1284,17 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                       <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors">
                         <input
                           type={showForgotConfirmPassword ? 'text' : 'password'}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={6}
                           value={forgotConfirmPassword}
                           onChange={(e) => {
-                            setForgotConfirmPassword(e.target.value);
+                            const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setForgotConfirmPassword(clean);
                             setForgotError(null);
                           }}
-                          placeholder="Re-enter new password"
-                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none"
+                          placeholder="Re-enter new 6-digit password"
+                          className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-mono"
                         />
                         <button
                           type="button"

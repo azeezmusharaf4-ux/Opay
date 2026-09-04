@@ -24,7 +24,7 @@ export const OPayRecentTransactionsPreview: React.FC<OPayRecentTransactionsPrevi
   return (
     <div 
       id="opay-recent-transactions-card"
-      className="rounded-2xl bg-[#1B1E24] p-2.5 border border-slate-800/80 shadow-sm space-y-1.5"
+      className="rounded-2xl bg-[#1E1F24] p-3 border border-slate-800/60 shadow-sm space-y-1.5"
     >
       <div className="space-y-1.5">
         {recent.map((tx) => {
@@ -35,7 +35,7 @@ export const OPayRecentTransactionsPreview: React.FC<OPayRecentTransactionsPrevi
             <div
               key={tx.id}
               onClick={() => onSelectTransaction(tx)}
-              className="flex items-center justify-between rounded-xl bg-[#14171E] p-2 hover:bg-[#1f242e] cursor-pointer transition-colors"
+              className="flex items-center justify-between rounded-xl bg-[#17181D] p-2 hover:bg-[#25272F] cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 {/* Icon matching reference */}
@@ -44,7 +44,7 @@ export const OPayRecentTransactionsPreview: React.FC<OPayRecentTransactionsPrevi
                     isInterest
                       ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
                       : isInflow
-                      ? 'bg-emerald-950/60 text-[#00D589] border border-emerald-500/30'
+                      ? 'bg-emerald-950/60 text-[#10C986] border border-emerald-500/30'
                       : 'bg-slate-800 text-slate-300 border border-slate-700'
                   }`}
                 >

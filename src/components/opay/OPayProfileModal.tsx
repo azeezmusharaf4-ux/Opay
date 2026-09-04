@@ -292,7 +292,7 @@ export const OPayProfileModal: React.FC<OPayProfileModalProps> = ({ onClose }) =
     setPinLoading(false);
 
     if (res.success) {
-      showToast('Payment PIN set successfully!');
+      showToast('Payment PIN changed successfully! You can now use this PIN for all transfers anytime.');
       setShowChangePinModal(false);
       setNewPinInput('');
       setConfirmPinInput('');

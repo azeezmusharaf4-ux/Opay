@@ -164,6 +164,7 @@ export interface RegisteredUserAccount {
   tempPassword?: string; // 6-digit temporary recovery password sent by SMS
   tempPasswordExpiresAt?: number; // Expiration timestamp for temporary password (10 min)
   mustResetPassword?: boolean; // When true, forces user to set a new permanent password immediately upon login
+  customPin?: string; // Stored user custom 4-digit PIN for permanent transfer authorization
   transactionPinHash?: string; // Hashed 4-digit transaction PIN
   pinSalt?: string; // Cryptographic salt
   failedPinAttempts?: number;

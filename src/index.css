@@ -1,11 +1,25 @@
 @import "tailwindcss";
 
+:root {
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 10px);
+}
+
 html, body {
+  background-color: #121212;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation;
+}
+
+.safe-top-padding {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.safe-bottom-padding {
+  padding-bottom: env(safe-area-inset-bottom, 10px);
 }
 
 /* Prevent iPhone Safari & mobile browsers from auto-zooming on input tap (requires font-size >= 16px) */

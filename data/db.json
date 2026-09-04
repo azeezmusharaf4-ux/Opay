@@ -5,11 +5,10 @@
       "fullName": "MUSARAF OLAWALE ABDULAZEEZ",
       "phone": "07075817357",
       "email": "moriobee44@gmail.com",
-      "role": "owner",
       "ninMasked": "•••••••4821",
       "loginPasswordHash": "453214118f37a2cca5a05616b23efea8e8b5102260f45389d5846c672a2e62f5",
-      "transactionPinHash": "fd42cae84a07fac91ad012a050fb9649156a289604e13de146c538edefe400c4",
-      "pinSalt": "1788392950149_sr3ltone81k",
+      "transactionPinHash": "bab1ca8bba9e8279a3f763e01b07aa8e6079b08c92701103f61099ef07592413",
+      "pinSalt": "1788485341945_319ziuh0koa",
       "failedPinAttempts": 0,
       "pinLockoutUntil": null,
       "verificationStatus": "account_active",
@@ -231,6 +230,246 @@
           "category": "outflow",
           "balanceAfterNgn": 142000,
           "sessionId": "100004178839285334833617794354"
+        },
+        {
+          "id": "tx-seed-owealth-1",
+          "reference": "260829013940182937102938",
+          "type": "deposit",
+          "title": "OWealth Interest Earned",
+          "description": "Daily compound interest credit on OWealth investment balance",
+          "amountNgn": 0.09,
+          "status": "successful",
+          "timestamp": 1787967580000,
+          "sender": {
+            "name": "OWealth Asset Management",
+            "accountOrPhone": "OWEALTH-DAILY",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "inflow",
+          "balanceAfterNgn": 40.86,
+          "sessionId": "260829013940182937102938"
+        },
+        {
+          "id": "tx-seed-stamp-duty-1",
+          "reference": "260828130921092837461928",
+          "type": "withdraw",
+          "title": "Stamp Duty",
+          "description": "Electronic Money Transfer Levy (EMTL)",
+          "amountNgn": 50,
+          "status": "successful",
+          "timestamp": 1787922561000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "FEDERAL INLAND REVENUE SERVICE (FIRS)",
+            "accountOrPhone": "STAMP-DUTY-EMTL",
+            "bankName": "CBN / FIRS"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 40.77,
+          "sessionId": "260828130921092837461928"
+        },
+        {
+          "id": "tx-seed-transfer-1",
+          "reference": "260828010100348299203012",
+          "type": "bank_transfer",
+          "title": "Transfer to FUNMILAYO ADENEKAN",
+          "description": "Interbank fund transfer to Funmilayo Adenekan",
+          "amountNgn": 11000,
+          "status": "successful",
+          "timestamp": 1787922553000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "FUNMILAYO ADENEKAN",
+            "accountOrPhone": "912 585 6006",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 90.77,
+          "sessionId": "260828010100348299203012"
+        },
+        {
+          "id": "tx-seed-transfer-musaraf-1",
+          "reference": "260828130732891726481029",
+          "type": "op_transfer",
+          "title": "Transfer to MUSARAF ABDULAZEEZ",
+          "description": "OPay to OPay fund transfer",
+          "amountNgn": 200,
+          "status": "successful",
+          "timestamp": 1787922452000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF ABDULAZEEZ",
+            "accountOrPhone": "707 581 7357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 11090.77,
+          "sessionId": "260828130732891726481029"
+        },
+        {
+          "id": "tx-seed-ussd-1",
+          "reference": "260828130641928374619283",
+          "type": "withdraw",
+          "title": "USSD Charge",
+          "description": "Banking USSD Service Charge",
+          "amountNgn": 10,
+          "status": "successful",
+          "timestamp": 1787922401000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "USSD TELCO NETWORK CHARGE",
+            "accountOrPhone": "USSD-NIBSS",
+            "bankName": "NIBSS / Telco"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 11290.77,
+          "sessionId": "260828130641928374619283"
+        },
+        {
+          "id": "tx-seed-transfer-sherifat-1",
+          "reference": "260828130613098273645192",
+          "type": "bank_transfer",
+          "title": "Transfer from SHERIFAT ABANIKANDA",
+          "description": "Inward fund transfer from Sherifat Abanikanda",
+          "amountNgn": 11300,
+          "status": "successful",
+          "timestamp": 1787922373000,
+          "sender": {
+            "name": "SHERIFAT ABANIKANDA",
+            "accountOrPhone": "08123984711",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "inflow",
+          "balanceAfterNgn": 11300.77,
+          "sessionId": "260828130613098273645192"
+        },
+        {
+          "id": "tx-seed-owealth-2",
+          "reference": "260828033814892716354891",
+          "type": "deposit",
+          "title": "OWealth Interest Earned",
+          "description": "Daily compound interest credit on OWealth investment balance",
+          "amountNgn": 0.09,
+          "status": "successful",
+          "timestamp": 1787888294000,
+          "sender": {
+            "name": "OWealth Asset Management",
+            "accountOrPhone": "OWEALTH-DAILY",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "inflow",
+          "balanceAfterNgn": 0.77,
+          "sessionId": "260828033814892716354891"
+        },
+        {
+          "id": "tx-seed-transfer-musaraf-2",
+          "reference": "260827124700982736451029",
+          "type": "op_transfer",
+          "title": "Transfer to MUSARAF ABDULAZEEZ",
+          "description": "OPay to OPay fund transfer",
+          "amountNgn": 130,
+          "status": "successful",
+          "timestamp": 1787834820000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF ABDULAZEEZ",
+            "accountOrPhone": "707 581 7357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 0.68,
+          "sessionId": "260827124700982736451029"
+        },
+        {
+          "id": "tx-seed-transfer-lateefat-1",
+          "reference": "260827093907892736451920",
+          "type": "bank_transfer",
+          "title": "Transfer to LATEEFAT OMOBUKOLA",
+          "description": "Interbank fund transfer to Lateefat Omobukola",
+          "amountNgn": 800,
+          "status": "successful",
+          "timestamp": 1787823547000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "LATEEFAT OMOBUKOLA",
+            "accountOrPhone": "810 928 3746",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 130.68,
+          "sessionId": "260827093907892736451920"
+        },
+        {
+          "id": "tx-seed-transfer-musaraf-3",
+          "reference": "260827084918892736451029",
+          "type": "op_transfer",
+          "title": "Transfer to MUSARAF ABDULAZEEZ",
+          "description": "OPay to OPay fund transfer",
+          "amountNgn": 200,
+          "status": "successful",
+          "timestamp": 1787820558000,
+          "sender": {
+            "name": "MUSARAF OLAWALE ABDULAZEEZ",
+            "accountOrPhone": "7075817357",
+            "bankName": "OPay"
+          },
+          "recipient": {
+            "name": "MUSARAF ABDULAZEEZ",
+            "accountOrPhone": "707 581 7357",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "outflow",
+          "balanceAfterNgn": 930.68,
+          "sessionId": "260827084918892736451029"
         }
       ],
       "cards": [
@@ -366,8 +605,10 @@
           "amountNgn": 2000
         }
       ],
+      "role": "owner",
       "passwordSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
-      "mustResetPassword": false
+      "mustResetPassword": false,
+      "customPin": "1234"
     },
     {
       "id": "acc-lateefat-user-b",
@@ -416,7 +657,32 @@
         "nickname": "Lateefat",
         "address": "12 Victoria Island, Lagos"
       },
-      "transactions": [],
+      "transactions": [
+        {
+          "id": "tx-seed-lateefat-initial",
+          "reference": "260826142011009827364512",
+          "type": "op_transfer",
+          "title": "Top-up from Bank Card",
+          "description": "Card deposit to OPay Wallet",
+          "amountNgn": 25000,
+          "status": "successful",
+          "timestamp": 1788312018584,
+          "sender": {
+            "name": "LATEEFAT OMOBUKOLA",
+            "accountOrPhone": "5399••••••••1234",
+            "bankName": "GTBank Visa Card"
+          },
+          "recipient": {
+            "name": "LATEEFAT OMOBUKOLA BABATUNDE",
+            "accountOrPhone": "7033529224",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "inflow",
+          "balanceAfterNgn": 25450,
+          "sessionId": "260826142011009827364512"
+        }
+      ],
       "cards": [
         {
           "id": "card-1",
@@ -514,7 +780,32 @@
         "nickname": "Funmi",
         "address": "5 Ikeja GRA, Lagos"
       },
-      "transactions": [],
+      "transactions": [
+        {
+          "id": "tx-seed-funmilayo-initial",
+          "reference": "260826142011009827364999",
+          "type": "op_transfer",
+          "title": "Top-up from Bank Card",
+          "description": "Card deposit to OPay Wallet",
+          "amountNgn": 18000,
+          "status": "successful",
+          "timestamp": 1788312018584,
+          "sender": {
+            "name": "FUNMILAYO ADENEKAN",
+            "accountOrPhone": "5399••••••••9912",
+            "bankName": "Access Bank Visa Card"
+          },
+          "recipient": {
+            "name": "FUNMILAYO ADENEKAN",
+            "accountOrPhone": "9125856006",
+            "bankName": "OPay"
+          },
+          "feeNgn": 0,
+          "category": "inflow",
+          "balanceAfterNgn": 18200,
+          "sessionId": "260826142011009827364999"
+        }
+      ],
       "cards": [
         {
           "id": "card-1",

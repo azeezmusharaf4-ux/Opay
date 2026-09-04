@@ -657,6 +657,8 @@ export const OPayTransferModal: React.FC<OPayTransferModalProps> = ({
               <div className="relative flex items-center rounded-xl bg-[#121419] border border-slate-800 px-3.5 py-2.5 focus-within:border-[#00D589]">
                 <input
                   type="text"
+                  inputMode="tel"
+                  pattern="[0-9]*"
                   autoComplete="off"
                   spellCheck={false}
                   value={accountNumber}
@@ -932,6 +934,8 @@ export const OPayTransferModal: React.FC<OPayTransferModalProps> = ({
                 <input
                   type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
                   autoComplete="off"
                   spellCheck={false}
                   value={accountNumber}

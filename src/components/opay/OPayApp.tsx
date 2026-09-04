@@ -71,10 +71,10 @@ export const OPayApp: React.FC = () => {
   return (
     <div 
       id="opay-web-app"
-      className="relative flex flex-col w-full max-w-md mx-auto min-h-screen bg-[#111318] text-slate-100 font-sans shadow-2xl border-x border-slate-800/40"
+      className="relative flex flex-col w-full max-w-md mx-auto min-h-screen bg-[#121212] text-slate-100 font-sans shadow-2xl border-x border-[#1E1F24]"
     >
       {/* Main Content Area */}
-      <main className={`flex-1 ${activeTab === 'me' ? 'px-3 sm:px-4 py-0 pb-16' : 'px-3 sm:px-3.5 py-1.5 space-y-2 pb-16'} w-full`}>
+      <main className={`flex-1 ${activeTab === 'me' ? 'px-3 sm:px-4 py-0 pb-24' : 'px-3 sm:px-3.5 py-1.5 space-y-2 pb-24'} w-full`}>
         {/* Top Header (Shown on Home and secondary tabs; Me tab has its own dedicated header matching IMG_2428.png) */}
         {activeTab !== 'me' && (
           <OPayHeader
@@ -92,6 +92,26 @@ export const OPayApp: React.FC = () => {
         {/* Tab-dependent Views */}
         {activeTab === 'home' && (
           <div className="space-y-2 animate-in fade-in duration-150">
+            {/* Announcement Banner matching IMG_2745.png */}
+            <div 
+              id="opay-announcement-bar"
+              onClick={() => setShowNotifications(true)}
+              className="flex items-center justify-between rounded-xl bg-[#241A12] px-2.5 py-1.5 text-xs text-[#E5943B] border border-[#3E2C1E]/60 cursor-pointer hover:bg-[#2F2116] transition-colors"
+            >
+              <div className="flex items-center gap-1.5 overflow-hidden">
+                <div className="flex items-center gap-1 shrink-0 font-bold">
+                  <svg className="h-3.5 w-3.5 fill-[#E5943B]" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  </svg>
+                  <span className="text-[10.5px]">More &gt;&gt;</span>
+                </div>
+                <span className="truncate text-[10.5px] font-medium text-[#E5943B]">
+                  OPay Official Statement: OPay is fully licensed by CBN and insured by NDIC
+                </span>
+              </div>
+              <span className="text-xs text-[#E5943B] shrink-0 font-bold ml-1">&gt;</span>
+            </div>
+
             {/* 1. Teal Balance Card & Business Sales */}
             <OPayBalanceCard
               onOpenHistory={() => requireAuth(() => setShowHistory(true))}
@@ -150,19 +170,6 @@ export const OPayApp: React.FC = () => {
           />
         )}
       </main>
-
-      {/* Floating Security / Bonus Badge matching IMG_2471.png and IMG_2472.png */}
-      {activeTab === 'home' && (
-        <button
-          id="floating-bonus-widget-btn"
-          onClick={() => setActiveService('SafeBox')}
-          className="fixed bottom-14 right-3 sm:right-[calc(50%-200px)] z-20 flex items-center gap-1 rounded-full bg-[#00D589] px-2.5 py-1 text-[10px] font-bold text-[#072418] shadow-md shadow-emerald-950/60 hover:scale-105 active:scale-95 transition-transform border border-emerald-300/40 opacity-90"
-          title="Security & Bonus"
-        >
-          <Sparkles className="h-3 w-3" />
-          <span>Click for Security</span>
-        </button>
-      )}
 
       {/* Pinned Working Bottom Navigation Bar */}
       <OPayBottomNav

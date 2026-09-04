@@ -10,6 +10,7 @@ import { OPayApp } from './components/opay/OPayApp';
 import { OPayNotificationsModal } from './components/opay/OPayNotificationsModal';
 import { OPaySplashScreen } from './components/opay/OPaySplashScreen';
 import { OPayAuthScreen } from './components/opay/auth/OPayAuthScreen';
+import { PWAInstallBanner } from './components/common/PWAInstallBanner';
 
 function AppContent() {
   const [showGlobalNotifications, setShowGlobalNotifications] = useState(false);
@@ -24,6 +25,9 @@ function AppContent() {
           onFinish={() => setShowSplash(false)} 
         />
       )}
+
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
 
       {/* Floating In-App Toast Notification */}
       <NotificationToast 

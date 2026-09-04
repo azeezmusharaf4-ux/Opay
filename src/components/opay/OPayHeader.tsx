@@ -20,17 +20,21 @@ export const OPayHeader: React.FC<OPayHeaderProps> = ({
   const { userProfile, unreadNotificationCount, isAuthenticated } = useDemoWallet();
 
   return (
-    <header id="opay-header" className="flex items-center justify-between py-1 text-white">
+    <header 
+      id="opay-header" 
+      className="flex items-center justify-between pb-2 text-white safe-top-padding"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 20px) + 6px)' }}
+    >
       {/* User Greeting & Avatar with Tier badge OR Logged-out state with Hi and Login button */}
       {!isAuthenticated ? (
         <div className="flex items-center gap-2.5">
-          <span className="text-base sm:text-lg font-bold tracking-tight text-white">
+          <span className="text-lg font-bold tracking-tight text-white">
             Hi
           </span>
           <button
             id="opay-header-login-btn"
             onClick={onOpenLogin || onOpenProfile}
-            className="rounded-full border border-[#00D589] px-4 py-1 text-xs sm:text-sm font-bold text-[#00D589] hover:bg-[#00D589]/15 active:scale-95 transition-all cursor-pointer shadow-sm"
+            className="rounded-full border border-[#10C986] px-4 py-1 text-xs sm:text-sm font-semibold text-[#10C986] bg-[#10C986]/10 hover:bg-[#10C986]/20 active:scale-95 transition-all cursor-pointer shadow-sm"
           >
             Login
           </button>

@@ -46,7 +46,8 @@ export const OPayBottomNav: React.FC<OPayBottomNavProps> = ({
   return (
     <nav 
       id="opay-bottom-nav" 
-      className="sticky bottom-0 z-30 flex items-center justify-around border-t border-slate-800/70 bg-[#16181E] px-2 py-1 rounded-t-2xl shadow-lg"
+      className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 flex items-center justify-around border-t border-slate-800/80 bg-[#16181E]/95 backdrop-blur-md px-2 pt-1.5 shadow-2xl safe-bottom-padding"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 10px) + 6px)' }}
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -57,21 +58,32 @@ export const OPayBottomNav: React.FC<OPayBottomNavProps> = ({
             key={tab.id}
             id={`opay-nav-tab-${tab.id}`}
             onClick={() => onChangeTab(tab.id)}
-            className={`relative flex flex-col items-center justify-center gap-0.5 px-2 py-0.5 transition-all ${
-              isActive ? 'text-[#00D589]' : 'text-slate-400 hover:text-slate-200'
-            }`}
+            className="relative flex flex-col items-center justify-center gap-0.5 px-2 py-0.5 transition-all cursor-pointer"
+            style={{ color: isActive ? '#10C986' : '#7E848D' }}
           >
-            <div className={`relative flex h-6 w-10 items-center justify-center rounded-full transition-colors ${
-              isActive ? 'bg-[#292E39]' : ''
-            }`}>
-              <Icon className={`h-4.5 w-4.5 ${isActive ? 'stroke-[2.5] text-[#00D589]' : 'stroke-[1.8] text-slate-400'}`} />
+            <div 
+              className={`relative flex h-7 w-11 items-center justify-center rounded-full transition-colors ${
+                isActive ? 'bg-[#22242B]' : ''
+              }`}
+            >
+              <Icon 
+                className={`h-5 w-5 ${
+                  isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'
+                }`} 
+              />
               
               {/* Notification dot for 'Me' tab */}
               {tab.id === 'me' && unreadNotificationCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#FF3B69] ring-2 ring-[#16181E]" />
+                <span className="absolute top-0.5 right-1 h-2 w-2 rounded-full bg-[#FF3B69] ring-2 ring-[#16181E]" />
               )}
             </div>
-            <span className={`text-[10px] tracking-tight ${isActive ? 'font-bold text-[#00D589]' : 'font-medium text-slate-400'}`}>
+            <span 
+              className="text-[10px] tracking-tight"
+              style={{
+                color: isActive ? '#10C986' : '#7E848D',
+                fontWeight: isActive ? '700' : '500'
+              }}
+            >
               {tab.label}
             </span>
           </button>
