@@ -6,7 +6,8 @@
       "phone": "07075817357",
       "email": "moriobee44@gmail.com",
       "ninMasked": "•••••••4821",
-      "loginPasswordHash": "453214118f37a2cca5a05616b23efea8e8b5102260f45389d5846c672a2e62f5",
+      "loginPasswordHash": "b4c3e02e03c5cba0340c285a2304b23588baef29507c49527abfc4c447d36561",
+      "customPin": "1234",
       "transactionPinHash": "bab1ca8bba9e8279a3f763e01b07aa8e6079b08c92701103f61099ef07592413",
       "pinSalt": "1788485341945_319ziuh0koa",
       "failedPinAttempts": 0,
@@ -607,8 +608,7 @@
       ],
       "role": "owner",
       "passwordSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
-      "mustResetPassword": false,
-      "customPin": "1234"
+      "mustResetPassword": false
     },
     {
       "id": "acc-lateefat-user-b",
@@ -617,6 +617,7 @@
       "email": "lateefat.omobukola@gmail.com",
       "ninMasked": "•••••••7192",
       "loginPasswordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+      "customPin": "1234",
       "transactionPinHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
       "pinSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
       "failedPinAttempts": 0,
@@ -740,6 +741,7 @@
       "email": "funmilayo.adenekan@gmail.com",
       "ninMasked": "•••••••5531",
       "loginPasswordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+      "customPin": "1234",
       "transactionPinHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
       "pinSalt": "OPAY_SECURE_NIGERIA_BANKING_SALT_2026",
       "failedPinAttempts": 0,
