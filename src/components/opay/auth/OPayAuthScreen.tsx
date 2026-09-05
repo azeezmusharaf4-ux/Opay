@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Keyboard
 } from 'lucide-react';
+import { OPayNumericKeypad } from '../../common/OPayNumericKeypad';
 import { useDemoWallet } from '../../../context/DemoWalletContext';
 import { validatePasswordStrength, validateTransactionPin } from '../../../utils/security';
 import { OPayIdentityVerificationModal } from './OPayIdentityVerificationModal';
@@ -67,22 +68,22 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
     refreshAccountsFromServer
   } = useDemoWallet();
 
-  // Determine starting mode based on remembered account
+  // Determine starting mode: Screen 2 ("Log in to your account") is standard entry matching OPay 4-step flow
   const determineStartMode = (): 'welcome_back' | 'full_login' | 'register' | 'forgot_password' => {
     if (initialMode === 'forgot_password') return 'forgot_password';
     if (initialMode === 'register') return 'register';
-    if (initialMode === 'welcome_back' && rememberedAccount) return 'welcome_back';
-    if (rememberedAccount) return 'welcome_back';
+    if (initialMode === 'welcome_back') return 'welcome_back';
     return 'full_login';
   };
 
   const [activeMode, setActiveMode] = useState<'welcome_back' | 'full_login' | 'register' | 'forgot_password'>(determineStartMode);
 
-  // Welcome back state
+  // Welcome back state (Screens 3 & 4)
   const [welcomePassword, setWelcomePassword] = useState('');
   const [showWelcomePassword, setShowWelcomePassword] = useState(false);
+  const [isKeypadVisible, setIsKeypadVisible] = useState(false);
 
-  // Full login state (IMG_2487.png)
+  // Full login state (Screen 2: IMG_2779.png)
   const [loginStep, setLoginStep] = useState<1 | 2>(1); // 1: Identifier, 2: Password
   const [loginIdentifier, setLoginIdentifier] = useState(rememberedAccount?.phone || '07075817357');
   const [loginPassword, setLoginPassword] = useState('');
@@ -91,6 +92,37 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [welcomeKeypadMode, setWelcomeKeypadMode] = useState<'keypad' | 'native'>('keypad');
   const [loginInputType, setLoginInputType] = useState<'phone' | 'email'>('phone');
+
+  // Physical keyboard support for Welcome Back screen (Screens 3 & 4)
+  useEffect(() => {
+    if (activeMode !== 'welcome_back') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        setIsKeypadVisible(true);
+        setLoginError(null);
+        setWelcomePassword((prev) => {
+          if (prev.length < 6) return prev + e.key;
+          return prev;
+        });
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        setLoginError(null);
+        setWelcomePassword((prev) => prev.slice(0, -1));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (welcomePassword.length === 6) {
+          handleWelcomeSubmit();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeMode, welcomePassword]);
 
   // Forgot Password flow state (Step 1: Phone -> Step 2: New Password -> Step 3: Success)
   const [forgotStep, setForgotStep] = useState<1 | 2 | 3>(1); // 1: Phone, 2: New Password, 3: Success
@@ -371,8 +403,9 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
       return;
     }
 
-    // Advance to password step if identifier provided
-    setLoginStep(2);
+    // Step 2 -> Step 3: Advance directly to "Welcome back!" screen
+    setActiveMode('welcome_back');
+    setIsKeypadVisible(false);
   };
 
   const handleFullLoginSubmit = async (e: React.FormEvent) => {
@@ -538,10 +571,16 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   setForgotError(null);
                 }
               } else if (activeMode === 'welcome_back') {
-                setActiveMode('full_login');
-                setLoginStep(1);
-              } else if (activeMode === 'full_login' && loginStep === 2) {
-                setLoginStep(1);
+                if (isKeypadVisible) {
+                  setIsKeypadVisible(false);
+                } else {
+                  setActiveMode('full_login');
+                  setLoginStep(1);
+                }
+              } else if (activeMode === 'full_login') {
+                if (onClose) {
+                  onClose();
+                }
               } else if (activeMode === 'register') {
                 setActiveMode('full_login');
               } else if (onClose) {
@@ -567,15 +606,15 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
         <div className="flex-1 px-6 py-5 flex flex-col justify-between overflow-y-auto">
           
           {/* ========================================================= */}
-          {/* VIEW 1: "WELCOME BACK!" SCREEN matching IMG_2489.png       */}
+          {/* VIEW 1: "WELCOME BACK!" SCREEN (Screens 3 & 4)            */}
           {/* ========================================================= */}
           {activeMode === 'welcome_back' && (
             <div className="flex-1 flex flex-col justify-between space-y-4 animate-in fade-in duration-200">
               <div className="space-y-4">
-                {/* 1. User Avatar & Remembered Phone */}
+                {/* 1. User Avatar & Display Phone (IMG_2780.png) */}
                 <div className="flex flex-col items-center text-center space-y-2 pt-2">
                   <div className="relative">
-                    <div className="h-20 w-20 rounded-full border-2 border-[#00D589]/50 p-0.5 bg-[#0D261C] shadow-[0_0_20px_rgba(0,213,137,0.25)] overflow-hidden">
+                    <div className="h-20 w-20 rounded-full border-2 border-[#00D589]/60 p-0.5 bg-[#0D261C] shadow-[0_0_20px_rgba(0,213,137,0.25)] overflow-hidden flex items-center justify-center">
                       {rememberedAccount?.userProfile?.avatarUrl ? (
                         <img 
                           src={rememberedAccount.userProfile.avatarUrl} 
@@ -586,25 +625,28 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                           }}
                         />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-[#0D261C] text-[#00D589] font-black text-2xl">
-                          {rememberedAccount?.fullName?.charAt(0) || 'U'}
+                        <div className="h-full w-full flex items-center justify-center bg-[#00D589]/15 text-[#00D589]">
+                          <User className="h-10 w-10 text-[#00D589]" />
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Remembered Phone Number */}
+                  {/* Formatted Phone Number */}
                   <div className="text-sm font-semibold text-slate-300 tracking-wider font-mono">
-                    {formatDisplayPhone(rememberedAccount?.phone || '07075817357')}
+                    {formatDisplayPhone(loginIdentifier || rememberedAccount?.phone || '07075817357')}
                   </div>
                 </div>
 
                 {/* 2. Headline: Welcome back! */}
-                <div className="space-y-1 text-left pt-1">
-                  <h1 className="text-2xl font-bold text-white tracking-tight">
+                <div className="space-y-1 text-center pt-0.5">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                     Welcome back!
                   </h1>
-                  <p className="text-xs text-slate-300 font-medium">
+                </div>
+
+                <div className="text-left pt-1">
+                  <p className="text-xs sm:text-sm text-slate-400 font-medium">
                     Enter your 6-digit Password to log in
                   </p>
                 </div>
@@ -617,76 +659,33 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </div>
                 )}
 
-                {/* Mode Switcher: In-App Keypad vs Native Keyboard */}
-                <div className="flex items-center justify-between pt-1 pb-1">
-                  <span className="text-[11.5px] text-slate-400 font-medium">Input Method:</span>
-                  <div className="flex items-center gap-1 bg-[#14161C] p-0.5 rounded-xl border border-slate-800 text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => setWelcomeKeypadMode('keypad')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                        welcomeKeypadMode === 'keypad'
-                          ? 'bg-[#00D589] text-[#072418] shadow'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <KeyRound className="h-3 w-3" />
-                      <span>In-App Pad</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setWelcomeKeypadMode('native')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                        welcomeKeypadMode === 'native'
-                          ? 'bg-[#00D589] text-[#072418] shadow'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <Keyboard className="h-3 w-3" />
-                      <span>Phone Keypad (123)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 6-Digit Visual Indicators */}
-                <div className="flex justify-center gap-2.5 py-2">
-                  {[0, 1, 2, 3, 4, 5].map((idx) => (
-                    <div
-                      key={idx}
-                      className={`h-3.5 w-3.5 rounded-full border-2 transition-all ${
-                        welcomePassword.length > idx
-                          ? 'bg-[#00D589] border-[#00D589] scale-110 shadow-sm shadow-[#00D589]/40'
-                          : 'border-slate-600 bg-[#121419]'
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                {/* 3. Password Input Field matching IMG_2489 */}
+                {/* 3. Password Input Box (Read-only to prevent mobile OS keyboard, clicks open OPay Secure Keypad) */}
                 <form onSubmit={handleWelcomeSubmit} className="space-y-3">
                   <div className="space-y-1">
-                    <div className="relative flex items-center rounded-2xl bg-[#1A1D24] border border-slate-700/80 focus-within:border-[#00D589] transition-colors p-1">
+                    <div 
+                      id="welcome-password-box"
+                      onClick={() => setIsKeypadVisible(true)}
+                      className={`relative flex items-center rounded-2xl bg-[#1A1D24] p-1 cursor-pointer transition-all ${
+                        isKeypadVisible 
+                          ? 'border-2 border-[#00D589] shadow-[0_0_15px_rgba(0,213,137,0.3)] ring-1 ring-[#00D589]/40' 
+                          : 'border border-slate-700/80 hover:border-slate-600'
+                      }`}
+                    >
                       <input
                         type={showWelcomePassword ? 'text' : 'password'}
-                        inputMode={welcomeKeypadMode === 'keypad' ? 'none' : 'numeric'}
-                        pattern="[0-9]*"
-                        autoComplete="current-password"
-                        enterKeyHint="done"
-                        maxLength={6}
-                        autoFocus={welcomeKeypadMode === 'native'}
+                        readOnly
+                        inputMode="none"
                         value={welcomePassword}
-                        onChange={(e) => {
-                          const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
-                          setWelcomePassword(clean);
-                          setLoginError(null);
-                        }}
-                        placeholder="Enter 6-digit password"
-                        className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none tracking-widest font-mono text-center"
+                        placeholder="Enter 6-digit Password"
+                        className="w-full bg-transparent py-3.5 px-4 text-base text-white placeholder-slate-500 focus:outline-none font-mono tracking-widest cursor-pointer select-none"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowWelcomePassword(!showWelcomePassword)}
-                        className="pr-4 text-slate-400 hover:text-white transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowWelcomePassword(!showWelcomePassword);
+                        }}
+                        className="pr-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
                         aria-label="Toggle password visibility"
                       >
                         {showWelcomePassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -697,14 +696,17 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                     <div className="flex justify-between items-center pt-1 text-xs">
                       <button
                         type="button"
-                        onClick={() => setActiveMode('full_login')}
-                        className="text-slate-400 hover:text-white transition-colors"
+                        onClick={() => {
+                          setActiveMode('full_login');
+                          setIsKeypadVisible(false);
+                        }}
+                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
                       >
                         Switch Account
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleOpenForgotPassword(rememberedAccount?.phone)}
+                        onClick={() => handleOpenForgotPassword(loginIdentifier || rememberedAccount?.phone)}
                         className="font-medium text-[#00D589] hover:underline cursor-pointer"
                       >
                         Forgot Password?
@@ -712,11 +714,16 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* 4. Green Pill Button: Log in */}
+                  {/* 4. Log in Button (Dark green disabled when < 6 digits, bright green when 6 digits) */}
                   <button
+                    id="welcome-login-btn"
                     type="submit"
                     disabled={isLoggingIn || welcomePassword.length < 6}
-                    className="w-full rounded-full bg-[#00D589] py-4 text-sm font-black text-[#072418] hover:bg-[#00E599] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] transition-all shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 cursor-pointer mt-3"
+                    className={`w-full rounded-full py-4 text-sm font-black transition-all flex items-center justify-center gap-2 mt-3 ${
+                      welcomePassword.length === 6
+                        ? 'bg-[#00D589] text-[#072418] hover:bg-[#00E599] active:scale-[0.99] shadow-lg shadow-emerald-950/40 cursor-pointer'
+                        : 'bg-[#0D4831] text-[#008254] cursor-not-allowed opacity-90'
+                    }`}
                   >
                     {isLoggingIn ? (
                       <span>Logging in...</span>
@@ -726,27 +733,27 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
                   </button>
                 </form>
 
-                {/* Touch Keypad for In-App Pad mode */}
-                {welcomeKeypadMode === 'keypad' && (
-                  <div className="pt-2 animate-in fade-in duration-200">
-                    <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-                      {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => handleKeypadPress(key)}
-                          className="h-11 rounded-xl bg-[#1D212A] hover:bg-slate-700/80 active:scale-95 text-white font-bold text-base transition-colors flex items-center justify-center shadow-sm cursor-pointer select-none"
-                        >
-                          {key === '⌫' ? <Delete className="h-4 w-4 text-slate-300" /> : key}
-                        </button>
-                      ))}
-                    </div>
+                {/* 5. Embedded OPay Secure Numeric Keypad (Screen 4 / IMG_2781.png) */}
+                {isKeypadVisible && (
+                  <div className="pt-2 animate-in slide-in-from-bottom-3 duration-200">
+                    <OPayNumericKeypad
+                      title="OPay Secure Numeric Keypad"
+                      onKeyPress={(key) => handleKeypadPress(key)}
+                      onDelete={() => {
+                        setLoginError(null);
+                        setWelcomePassword(prev => prev.slice(0, -1));
+                      }}
+                      onClear={() => {
+                        setLoginError(null);
+                        setWelcomePassword('');
+                      }}
+                    />
                   </div>
                 )}
               </div>
 
               {/* Regulatory Footer */}
-              <div className="pt-4 border-t border-slate-800/60 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+              <div className="pt-3 border-t border-slate-800/60 flex items-center justify-center gap-2 text-[11px] text-slate-400">
                 <Shield className="h-4 w-4 text-[#00D589]" />
                 <span>Protected by OPay End-to-End Encryption</span>
               </div>

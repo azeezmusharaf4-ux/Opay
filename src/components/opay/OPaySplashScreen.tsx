@@ -12,12 +12,12 @@ export const OPaySplashScreen: React.FC<OPaySplashScreenProps> = ({
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    // Start fade out slightly before completion
+    // Start smooth dissolve transition at 1700ms (matches video Frame 00:02)
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
-    }, Math.max(duration - 300, 1500));
+    }, Math.max(duration - 500, 1400));
 
-    // Finish splash
+    // Remove from DOM after dissolve finishes (Frame 00:03)
     const finishTimer = setTimeout(() => {
       if (onFinish) {
         onFinish();
@@ -33,75 +33,87 @@ export const OPaySplashScreen: React.FC<OPaySplashScreenProps> = ({
   return (
     <div 
       id="opay-splash-screen"
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#00B67A] text-white transition-opacity duration-300 select-none ${
+      onClick={() => setIsFadingOut(true)}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#00B875] text-[#0A1C2A] transition-opacity duration-500 ease-out select-none cursor-pointer ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* Center Container matching IMG_2422.png */}
-      <div className="flex flex-col items-center justify-center px-6 -mt-12 text-center animate-in fade-in zoom-in-95 duration-500">
+      {/* Centered Brand Lockup matching Frame 00:01 & 00:02 in video */}
+      <div className="flex flex-col items-center justify-center px-6 text-center animate-in fade-in zoom-in-[0.98] duration-300">
         
-        {/* 1. White circular emblem with OPay 'O' Logo */}
-        <div className="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center rounded-full bg-white shadow-xl shadow-emerald-900/20">
+        {/* 1. White OPay Logo Ring directly on green canvas */}
+        <div className="relative flex items-center justify-center">
           <svg 
-            className="h-16 w-16 sm:h-20 sm:w-20" 
+            className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm" 
             viewBox="0 0 100 100" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* OPay Green Outer Ring */}
+            {/* Crisp White Outer Ring */}
             <circle 
               cx="50" 
               cy="50" 
               r="34" 
-              stroke="#00B67A" 
+              stroke="#FFFFFF" 
               strokeWidth="15" 
             />
-            {/* Dark Purple Horizontal Segment/Bar on the Left */}
+            {/* Cyan/Mint Horizontal Tab on the left matching OPay brand mark in video */}
             <rect 
               x="12" 
-              y="44.5" 
-              width="24" 
-              height="11" 
+              y="42" 
+              width="22" 
+              height="16" 
               rx="2.5" 
-              fill="#22004B" 
+              fill="#00D589" 
             />
           </svg>
         </div>
 
         {/* 2. Slogan: "We are Beyond Banking" */}
         <h1 
-          className="mt-7 sm:mt-8 text-2xl sm:text-3xl font-black tracking-tight text-[#1E0242] leading-tight"
+          className="mt-6 text-2xl sm:text-[28px] font-extrabold tracking-tight text-[#0A1C2A] leading-tight"
           style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
           We are Beyond Banking
         </h1>
 
-        {/* 3. Regulatory Disclaimer matching IMG_2422.png footer banner */}
-        <div className="mt-8 flex items-center justify-center gap-2 text-[#1E0242] text-[11px] sm:text-xs">
-          {/* Nigerian Coat of Arms icon vector */}
-          <div className="h-5 w-5 shrink-0 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current text-emerald-950" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L14.5 7H18L15 10L16.5 15L12 12L7.5 15L9 10L6 7H9.5L12 2Z" fill="#14462B" />
-              <path d="M7 11C7 16 12 21 12 21C12 21 17 16 17 11V6L12 4L7 6V11Z" stroke="#1E0242" strokeWidth="1.5" fill="none" />
-              <path d="M9.5 9L12 13L14.5 9M12 13V18" stroke="#00B67A" strokeWidth="1.5" strokeLinecap="round" />
+        {/* 3. Regulatory Disclaimer: Coat of Arms + CBN / NDIC Banner */}
+        <div className="mt-8 flex items-center justify-center gap-2 text-[#0A1C2A] text-xs sm:text-[13px]">
+          {/* Nigerian Coat of Arms vector badge */}
+          <div className="h-6 w-6 shrink-0 flex items-center justify-center">
+            <svg viewBox="0 0 48 48" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+              {/* Red Eagle Crest */}
+              <path d="M24 6C23 4 25 3 24 2C23 3 25 4 24 6Z" fill="#D32F2F" />
+              <circle cx="24" cy="5" r="2.5" fill="#D32F2F" />
+              {/* Torse */}
+              <rect x="20" y="8" width="8" height="2" rx="1" fill="#00B875" />
+              <rect x="22" y="8" width="4" height="2" fill="#FFFFFF" />
+              {/* Black Shield with Y-pall */}
+              <path d="M18 11H30V24C30 30 24 35 24 35C24 35 18 30 18 24V11Z" fill="#111827" />
+              <path d="M20 12L24 20L28 12M24 20V32" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Left Stallion (White Horse) */}
+              <path d="M12 24C12 18 15 15 17 14L18 20L15 28L13 28Z" fill="#F9FAFB" />
+              {/* Right Stallion (White Horse) */}
+              <path d="M36 24C36 18 33 15 31 14L30 20L33 28L35 28Z" fill="#F9FAFB" />
+              {/* Green Mount Base */}
+              <ellipse cx="24" cy="36" rx="16" ry="3" fill="#15803D" />
             </svg>
           </div>
 
-          <div className="flex items-center gap-1 font-medium tracking-tight">
-            <span>Licensed by the <strong className="font-extrabold text-[#140030]">CBN</strong> and insured by the</span>
-            <span className="text-slate-500 font-light mx-0.5">|</span>
-            <div className="flex flex-col items-start leading-none">
-              <span className="font-black text-[#140030] text-xs sm:text-[13px] tracking-tight">NDIC</span>
-              <span className="text-[5px] sm:text-[6px] uppercase tracking-tighter opacity-85 font-semibold -mt-0.5">Nigeria Deposit Insurance Corporation</span>
+          <div className="flex items-center gap-1 font-semibold tracking-tight text-[#0A1C2A]">
+            <span>Licensed by the <strong className="font-black text-[#0A1C2A]">CBN</strong> and insured by the</span>
+            <span className="text-[#0A1C2A]/60 font-normal mx-0.5">|</span>
+            <div className="flex items-baseline">
+              <span className="font-black text-[#004C97] text-xs sm:text-[14px] tracking-tight">NDIC</span>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* Subtle bottom home bar simulator matching iOS screenshot aesthetic */}
-      <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none">
-        <div className="h-1 w-32 rounded-full bg-[#1E0242]/30" />
+      {/* Subtle home indicator bar at bottom matching iOS */}
+      <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none">
+        <div className="h-1 w-32 rounded-full bg-[#0A1C2A]/20" />
       </div>
     </div>
   );

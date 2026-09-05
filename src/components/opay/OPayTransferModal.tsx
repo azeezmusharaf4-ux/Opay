@@ -21,6 +21,7 @@ import {
   Users
 } from 'lucide-react';
 import { OPayReceiptModal } from './OPayReceiptModal';
+import { OPayNumericKeypad } from '../common/OPayNumericKeypad';
 import { Transaction } from '../../types';
 
 interface OPayTransferModalProps {
@@ -1234,31 +1235,21 @@ export const OPayTransferModal: React.FC<OPayTransferModalProps> = ({
               ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => {
-                    if (k === 'C') {
-                      setPin('');
-                    } else if (k === '⌫') {
-                      setPin(p => p.slice(0, -1));
-                    } else {
-                      if (pin.length < 4) {
-                        const newPin = pin + k;
-                        setPin(newPin);
-                        if (newPin.length === 4) {
-                          handlePinSubmit(newPin);
-                        }
-                      }
+            <div className="pt-2">
+              <OPayNumericKeypad
+                title="OPay Secure PIN Keypad"
+                onKeyPress={(k) => {
+                  if (pin.length < 4) {
+                    const newPin = pin + k;
+                    setPin(newPin);
+                    if (newPin.length === 4) {
+                      handlePinSubmit(newPin);
                     }
-                  }}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-[#1F2430] text-sm font-bold text-white hover:bg-slate-700 active:scale-95 transition-all shadow-sm font-mono cursor-pointer"
-                >
-                  {k}
-                </button>
-              ))}
+                  }
+                }}
+                onDelete={() => setPin(p => p.slice(0, -1))}
+                onClear={() => setPin('')}
+              />
             </div>
 
             <button
