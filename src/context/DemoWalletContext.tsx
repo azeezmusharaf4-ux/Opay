@@ -993,6 +993,30 @@ const DEFAULT_USER_C_ACCOUNT: RegisteredUserAccount = {
   ],
 };
 
+const DEFAULT_GUEST_PROFILE: OPayUserProfile = {
+  name: 'OPay User',
+  fullName: 'OPay Customer',
+  phone: '',
+  accountNumber: '',
+  tier: 1,
+  tierName: 'Tier 1',
+  dailyLimitNgn: 50000,
+  singleMaxNgn: 20000,
+  avatarUrl: '',
+  todaySalesNgn: 0,
+  savingsBalanceNgn: 0,
+  owealthBalanceNgn: 0,
+  cashbackPointsNgn: 0,
+  isKycVerified: false,
+  email: '',
+  bvnLinked: false,
+  ninLinked: false,
+  gender: '',
+  dob: '',
+  nickname: '',
+  address: '',
+};
+
 const DEFAULT_SEED_ACCOUNTS: RegisteredUserAccount[] = [
   DEFAULT_MASTER_ACCOUNT,
   DEFAULT_USER_B_ACCOUNT,
@@ -1027,9 +1051,9 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
       if (saved) return saved;
       const active = localStorage.getItem(ACTIVE_ACCOUNT_KEY);
       if (active) return active;
-      return DEFAULT_MASTER_ACCOUNT.id;
+      return null;
     } catch {
-      return DEFAULT_MASTER_ACCOUNT.id;
+      return null;
     }
   });
 
@@ -1043,9 +1067,9 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const [currentAccountId, setCurrentAccountId] = useState<string | null>(() => {
     try {
-      return localStorage.getItem(ACTIVE_ACCOUNT_KEY) || DEFAULT_MASTER_ACCOUNT.id;
+      return localStorage.getItem(ACTIVE_ACCOUNT_KEY) || null;
     } catch {
-      return DEFAULT_MASTER_ACCOUNT.id;
+      return null;
     }
   });
 
@@ -1056,7 +1080,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
       const savedActive = localStorage.getItem(ACTIVE_ACCOUNT_KEY);
       return Boolean(savedActive);
     } catch {
-      return true;
+      return false;
     }
   });
 
@@ -1078,7 +1102,8 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
   // Initialize state directly from locally saved active account to prevent any balance/transaction reset on reload
   const initialActiveAccount = (() => {
     try {
-      const activeId = localStorage.getItem(ACTIVE_ACCOUNT_KEY) || DEFAULT_MASTER_ACCOUNT.id;
+      const activeId = localStorage.getItem(ACTIVE_ACCOUNT_KEY);
+      if (!activeId) return null;
       const savedAccounts = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
       const permanentPin = localStorage.getItem('opay_permanent_payment_pin');
 
@@ -1097,35 +1122,24 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
           }
         }
       }
-      const localPin = permanentPin || localStorage.getItem(`opay_pin_${DEFAULT_MASTER_ACCOUNT.id}`) || DEFAULT_MASTER_ACCOUNT.customPin;
-      const localPinHash = localStorage.getItem(`opay_pin_hash_${DEFAULT_MASTER_ACCOUNT.id}`) || DEFAULT_MASTER_ACCOUNT.transactionPinHash;
-      return {
-        ...DEFAULT_MASTER_ACCOUNT,
-        customPin: localPin,
-        transactionPinHash: localPinHash,
-      };
+      return DEFAULT_SEED_ACCOUNTS.find(a => a.id === activeId) || null;
     } catch {
-      return DEFAULT_MASTER_ACCOUNT;
+      return null;
     }
   })();
 
   const [opayBalance, setOpayBalance] = useState<number>(() => {
-    return typeof initialActiveAccount.balanceNgn === 'number'
-      ? initialActiveAccount.balanceNgn
-      : DEFAULT_MASTER_ACCOUNT.balanceNgn;
+    return initialActiveAccount?.balanceNgn ?? 0;
   });
   const [isBalanceHidden, setIsBalanceHidden] = useState<boolean>(false);
-  const [userProfile, setUserProfile] = useState<OPayUserProfile>(() => initialActiveAccount.userProfile || DEFAULT_USER_PROFILE);
-  const [cards, setCards] = useState<OPayDebitCard[]>(() => initialActiveAccount.cards || DEFAULT_CARDS);
-  const [safeBoxes, setSafeBoxes] = useState<SafeBoxPlan[]>(() => initialActiveAccount.safeBoxes || DEFAULT_SAFEBOXES);
-  const [activeLoan, setActiveLoan] = useState<ActiveLoan>(() => initialActiveAccount.activeLoan || DEFAULT_LOAN);
+  const [userProfile, setUserProfile] = useState<OPayUserProfile>(() => initialActiveAccount?.userProfile || DEFAULT_GUEST_PROFILE);
+  const [cards, setCards] = useState<OPayDebitCard[]>(() => initialActiveAccount?.cards || []);
+  const [safeBoxes, setSafeBoxes] = useState<SafeBoxPlan[]>(() => initialActiveAccount?.safeBoxes || []);
+  const [activeLoan, setActiveLoan] = useState<ActiveLoan>(() => initialActiveAccount?.activeLoan || DEFAULT_LOAN);
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    if (Array.isArray(initialActiveAccount.transactions) && initialActiveAccount.transactions.length > 0) {
-      return initialActiveAccount.transactions;
-    }
-    return DEFAULT_MASTER_ACCOUNT.transactions || INITIAL_TRANSACTIONS;
+    return initialActiveAccount?.transactions || [];
   });
-  const [notifications, setNotifications] = useState<DemoNotification[]>(() => initialActiveAccount.notifications || generateSeedNotifications());
+  const [notifications, setNotifications] = useState<DemoNotification[]>(() => initialActiveAccount?.notifications || []);
   const [activeToast, setActiveToast] = useState<DemoNotification | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const isInitialServerLoaded = useRef(false);
@@ -1440,40 +1454,13 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
       address: '',
     };
 
-    const initialTx: Transaction = {
-      id: `tx-welcome-${Date.now()}`,
-      reference: generateReference(),
-      type: 'reward_bonus',
-      title: 'OPay Welcome Credit',
-      description: 'Account activation credit & NIMC identity + biometric verification confirmation',
-      amountNgn: 10000.00,
-      status: 'successful',
-      timestamp: Date.now(),
-      sender: {
-        name: 'OPay Nigeria Welcome Desk',
-        accountOrPhone: 'OPAY-WELCOME',
-        bankName: 'OPay Microfinance Bank',
-      },
-      recipient: {
-        name: cleanFullName,
-        accountOrPhone: derivedAccNum,
-        bankName: 'OPay',
-      },
-      feeNgn: 0,
-      category: 'inflow',
-      balanceAfterNgn: 10000.00,
-      sessionId: generateSessionId(),
-    };
-
     const welcomeNotification: DemoNotification = {
       id: `notif-welcome-${Date.now()}`,
       title: 'Account Active & Biometrics Verified 🛡️',
-      message: `Welcome to OPay, ${cleanFullName}! Your account (${derivedAccNum}) is active. ₦10,000.00 welcome balance credited.`,
+      message: `Welcome to OPay, ${cleanFullName}! Your account (${derivedAccNum}) is active and ready.`,
       timestamp: Date.now(),
       read: false,
       type: 'security',
-      amountNgn: 10000.00,
-      status: 'successful',
     };
 
     const newAccount: RegisteredUserAccount = {
@@ -1500,26 +1487,11 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
         provider: 'NIMC / OPay Identity Verification Gateway',
       },
       accountNumber: derivedAccNum,
-      balanceNgn: 10000.00,
+      balanceNgn: 0.00,
       createdAt: Date.now(),
       userProfile: newProfile,
-      transactions: [initialTx],
-      cards: [
-        {
-          id: `card-verve-${Date.now()}`,
-          cardType: 'Physical Verve',
-          cardNumber: `5061 0422 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`,
-          cardHolder: cleanFullName,
-          expiryDate: '12/30',
-          cvv: `${Math.floor(100 + Math.random() * 900)}`,
-          isFrozen: false,
-          isOnlineEnabled: true,
-          isAtmEnabled: true,
-          isPosEnabled: true,
-          dailySpendLimit: 500000,
-          colorTheme: 'teal',
-        }
-      ],
+      transactions: [],
+      cards: [],
       safeBoxes: [],
       activeLoan: {
         loanLimitNgn: 150000.00,
@@ -1528,7 +1500,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
         dailyInterestPercent: 0.1,
         status: 'eligible',
       },
-      notifications: [welcomeNotification, ...generateSeedNotifications().slice(0, 5)],
+      notifications: [welcomeNotification],
     };
 
     saveStoredPinForAccount(newAccount, cleanPin);
@@ -1553,21 +1525,28 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
         pin: cleanPin,
         verificationLog: newAccount.verificationLog,
         accountNumber: derivedAccNum,
-        balanceNgn: 10000.00,
+        balanceNgn: 0.00,
       }),
     }).catch(() => {});
 
     const updatedList = [newAccount, ...registeredAccounts];
     setRegisteredAccounts(updatedList);
     setCurrentAccountId(newAccount.id);
+    setRememberedAccountId(newAccount.id);
     setIsAuthenticated(true);
+    setIsManuallyLoggedOut(false);
+    try {
+      localStorage.setItem(ACTIVE_ACCOUNT_KEY, newAccount.id);
+      localStorage.setItem(REMEMBERED_ACCOUNT_KEY, newAccount.id);
+      localStorage.removeItem(MANUAL_LOGOUT_KEY);
+    } catch {}
 
-    setOpayBalance(newAccount.balanceNgn);
+    setOpayBalance(0.00);
     setUserProfile(newAccount.userProfile);
-    setCards(newAccount.cards);
-    setSafeBoxes(newAccount.safeBoxes);
+    setCards([]);
+    setSafeBoxes([]);
     setActiveLoan(newAccount.activeLoan);
-    setTransactions(newAccount.transactions);
+    setTransactions([]);
     setNotifications(newAccount.notifications);
 
     triggerToast(welcomeNotification);
@@ -1794,7 +1773,13 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // 3. Verify Transaction PIN (4-Digits with Permanent Multi-Day Persistence)
   const verifyTransactionPin = async (pinVal: string): Promise<VerifyPinResult> => {
-    const acc = registeredAccounts.find(a => a.id === currentAccountId) || DEFAULT_MASTER_ACCOUNT;
+    if (!currentAccountId) {
+      return { success: false, verified: false, message: 'Please log in to authorize this transaction.' };
+    }
+    const acc = registeredAccounts.find(a => a.id === currentAccountId);
+    if (!acc) {
+      return { success: false, verified: false, message: 'Account not found. Please log in again.' };
+    }
     const cleanPin = pinVal.trim();
 
     // 1. Direct persistent custom PIN check strictly bound to this account
@@ -1842,6 +1827,12 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
   const logoutUser = (isManual: boolean = true) => {
     setIsAuthenticated(false);
     setCurrentAccountId(null);
+    setOpayBalance(0);
+    setTransactions([]);
+    setNotifications([]);
+    setCards([]);
+    setSafeBoxes([]);
+    setUserProfile(DEFAULT_GUEST_PROFILE);
     try {
       localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
     } catch {}
@@ -1872,7 +1863,9 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     } catch {}
   };
 
-  const rememberedAccount = registeredAccounts.find(a => a.id === rememberedAccountId) || registeredAccounts.find(a => a.id === 'acc-musaraf-default') || registeredAccounts[0] || DEFAULT_MASTER_ACCOUNT;
+  const rememberedAccount = rememberedAccountId
+    ? (registeredAccounts.find(a => a.id === rememberedAccountId) || null)
+    : null;
 
   // Helper to check owner/admin account
   const isOwnerAdminUser = (user?: RegisteredUserAccount | null): boolean => {
@@ -1945,9 +1938,15 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     newPin: string;
     currentPin?: string;
   }): Promise<{ success: boolean; message?: string }> => {
-    const activeAccId = currentAccountId || DEFAULT_MASTER_ACCOUNT.id;
+    if (!currentAccountId) {
+      return { success: false, message: 'Please log in to change transaction PIN.' };
+    }
+    const activeAccId = currentAccountId;
     const cleanPin = params.newPin.trim();
-    const activeAcc = registeredAccounts.find(a => a.id === activeAccId) || DEFAULT_MASTER_ACCOUNT;
+    const activeAcc = registeredAccounts.find(a => a.id === activeAccId);
+    if (!activeAcc) {
+      return { success: false, message: 'Account not found.' };
+    }
 
     // 1. Immediately store in persistent device keys forever bound to this account
     try {

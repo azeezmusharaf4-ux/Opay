@@ -72,7 +72,8 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
   const determineStartMode = (): 'welcome_back' | 'full_login' | 'register' | 'forgot_password' => {
     if (initialMode === 'forgot_password') return 'forgot_password';
     if (initialMode === 'register') return 'register';
-    if (initialMode === 'welcome_back') return 'welcome_back';
+    if (initialMode === 'welcome_back' && rememberedAccount && !isManuallyLoggedOut) return 'welcome_back';
+    if (rememberedAccount && !isManuallyLoggedOut) return 'welcome_back';
     return 'full_login';
   };
 
@@ -85,7 +86,7 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
 
   // Full login state (Screen 2: IMG_2779.png)
   const [loginStep, setLoginStep] = useState<1 | 2>(1); // 1: Identifier, 2: Password
-  const [loginIdentifier, setLoginIdentifier] = useState(rememberedAccount?.phone || '07075817357');
+  const [loginIdentifier, setLoginIdentifier] = useState(rememberedAccount?.phone || '');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
 
   // Forgot Password flow state (Step 1: Phone -> Step 2: New Password -> Step 3: Success)
   const [forgotStep, setForgotStep] = useState<1 | 2 | 3>(1); // 1: Phone, 2: New Password, 3: Success
-  const [forgotPhone, setForgotPhone] = useState(rememberedAccount?.phone || '07075817357');
+  const [forgotPhone, setForgotPhone] = useState(rememberedAccount?.phone || '');
   const [forgotAccountName, setForgotAccountName] = useState('');
   const [forgotMaskedPhone, setForgotMaskedPhone] = useState('');
   const [forgotAccountId, setForgotAccountId] = useState('');
