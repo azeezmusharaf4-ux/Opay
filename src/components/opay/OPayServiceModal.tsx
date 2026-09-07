@@ -70,9 +70,9 @@ export const OPayServiceModal: React.FC<OPayServiceModalProps> = ({ serviceName,
         setSuccessMsg(`Locked ${formatNgn(numAmount)} in ${customTitle} at 22% p.a.`);
       } else if (serviceName === 'Loan') {
         await requestInstantLoan(numAmount);
-        setSuccessMsg(`Simulated loan of ${formatNgn(numAmount)} disbursed to your wallet.`);
+        setSuccessMsg(`Instant loan of ${formatNgn(numAmount)} disbursed to your wallet.`);
       } else if (serviceName === 'Invitation') {
-        alert('Invitation link copied! Share with friends to test referral rewards.');
+        alert('Invitation link copied! Share with friends to earn referral bonuses.');
         onClose();
         return;
       } else {

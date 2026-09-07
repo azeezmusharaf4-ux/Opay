@@ -1,1 +1,4 @@
-/*    /index.html   200
+/api/resolve-account  /.netlify/functions/resolve-account  200
+/api/banks            /.netlify/functions/banks            200
+/api/*                /.netlify/functions/api/:splat       200
+/*                    /index.html                          200

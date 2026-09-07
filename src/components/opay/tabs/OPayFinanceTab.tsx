@@ -44,7 +44,7 @@ export const OPayFinanceTab: React.FC<OPayFinanceTabProps> = ({
     setRepaying(true);
     try {
       await repayInstantLoan(activeLoan.currentBorrowedNgn);
-      alert('Loan repaid in full from your available demo balance.');
+      alert('Loan repaid in full from your available wallet balance.');
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Repayment failed.');
     } finally {

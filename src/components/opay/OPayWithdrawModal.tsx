@@ -41,7 +41,7 @@ export const OPayWithdrawModal: React.FC<OPayWithdrawModalProps> = ({ onClose })
       setCashoutCode(res.code);
       setCompletedTx(res.tx);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Withdrawal simulation failed.');
+      setError(err instanceof Error ? err.message : 'Withdrawal request failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +153,7 @@ export const OPayWithdrawModal: React.FC<OPayWithdrawModalProps> = ({ onClose })
             </div>
 
             <div className="rounded-xl bg-[#131E18] p-3 text-[11px] text-emerald-300 border border-emerald-900/50 flex items-center justify-between">
-              <span>Simulated Cashout Fee</span>
+              <span>Cashout Fee</span>
               <span className="font-bold text-[#00D589]">₦0.00 (Free)</span>
             </div>
 

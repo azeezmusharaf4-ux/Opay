@@ -70,16 +70,26 @@ export function validatePasswordStrength(password: string): {
   const feedback: string[] = [];
   let score = 0;
 
-  if (password.length >= 6) score += 1;
-  else feedback.push('At least 6 characters required');
+  if (password.length >= 6) {
+    score += 1;
+  } else {
+    feedback.push('At least 6 digits or characters required');
+  }
 
-  if (/[a-zA-Z]/.test(password)) score += 1;
-  else feedback.push('Must include at least one letter');
+  const isNumericOnly = /^\d+$/.test(password);
+  const hasLetters = /[a-zA-Z]/.test(password);
+  const hasNumbers = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-  if (/[0-9]/.test(password)) score += 1;
-  else feedback.push('Must include at least one number');
-
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(password) || password.length >= 8) score += 1;
+  if (isNumericOnly && password.length >= 6) {
+    // Pure numbers (e.g. 6-digit PIN password) is standard and valid for Nigerian fintech login
+    score = 3;
+    if (password.length >= 8) score = 4;
+  } else {
+    if (hasLetters) score += 1;
+    if (hasNumbers) score += 1;
+    if (hasSpecial || password.length >= 8) score += 1;
+  }
 
   let label = 'Weak';
   if (score === 2) label = 'Fair';
@@ -87,7 +97,8 @@ export function validatePasswordStrength(password: string): {
   if (score >= 4) label = 'Strong';
 
   return {
-    isValid: password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password),
+    // Login password can be pure numbers (e.g., 6 digits) or alphanumeric
+    isValid: password.length >= 6 && (isNumericOnly || (hasLetters && hasNumbers) || score >= 2),
     score,
     label,
     feedback,
@@ -179,15 +190,25 @@ export async function hashCredentialsOnBackend(password: string, pin: string): P
 export async function verifyPinOnBackend(params: {
   accountId: string;
   pin: string;
+  phone?: string;
+  accountNumber?: string;
   expectedPinHash?: string;
   salt?: string;
 }): Promise<VerifyPinResult> {
   const cleanPin = params.pin.trim();
+  const cleanPhone = (params.phone || '').replace(/\D/g, '');
+  const last10Phone = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+  const cleanAccNum = (params.accountNumber || '').replace(/\D/g, '');
 
-  // 1. Direct local storage check for active user custom PIN (instant & 100% resilient across Netlify & reloads)
+  // 1. Direct local storage check for this account's PIN tied to their phone, account number, or accountId
   try {
-    const savedLocalPin = localStorage.getItem(`opay_pin_${params.accountId}`);
-    if (savedLocalPin && savedLocalPin.trim() === cleanPin) {
+    const phonePin = cleanPhone ? localStorage.getItem(`opay_pin_phone_${cleanPhone}`) : null;
+    const last10Pin = last10Phone ? localStorage.getItem(`opay_pin_phone_${last10Phone}`) : null;
+    const accNumPin = cleanAccNum ? localStorage.getItem(`opay_pin_acc_${cleanAccNum}`) : null;
+    const accIdPin = params.accountId ? localStorage.getItem(`opay_pin_${params.accountId}`) : null;
+
+    const matchedPin = phonePin || last10Pin || accNumPin || accIdPin;
+    if (matchedPin && matchedPin.trim() === cleanPin) {
       return {
         success: true,
         verified: true,
@@ -200,7 +221,14 @@ export async function verifyPinOnBackend(params: {
     const response = await fetch('/api/auth/verify-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        accountId: params.accountId,
+        phone: params.phone,
+        accountNumber: params.accountNumber,
+        pin: cleanPin,
+        expectedPinHash: params.expectedPinHash,
+        salt: params.salt,
+      }),
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -218,6 +246,21 @@ export async function verifyPinOnBackend(params: {
       }
 
       if (response.status === 401) {
+        // Double check local phone / account PIN before rejecting
+        try {
+          const phonePin = cleanPhone ? localStorage.getItem(`opay_pin_phone_${cleanPhone}`) : null;
+          const last10Pin = last10Phone ? localStorage.getItem(`opay_pin_phone_${last10Phone}`) : null;
+          const accIdPin = params.accountId ? localStorage.getItem(`opay_pin_${params.accountId}`) : null;
+          const matched = phonePin || last10Pin || accIdPin;
+          if (matched && matched.trim() === cleanPin) {
+            return {
+              success: true,
+              verified: true,
+              message: 'PIN verified successfully.',
+            };
+          }
+        } catch {}
+
         return {
           success: false,
           verified: false,
@@ -241,8 +284,11 @@ export async function verifyPinOnBackend(params: {
 
   // Fallback verification (works in static/Netlify environments or offline)
   try {
-    const savedHash = localStorage.getItem(`opay_pin_hash_${params.accountId}`);
-    const savedSalt = localStorage.getItem(`opay_pin_salt_${params.accountId}`) || params.salt || 'OPAY_SECURE_NIGERIA_BANKING_SALT_2026';
+    const savedHash = localStorage.getItem(`opay_pin_hash_${params.accountId}`) || 
+                      (cleanPhone ? localStorage.getItem(`opay_pin_hash_${cleanPhone}`) : null);
+    const savedSalt = localStorage.getItem(`opay_pin_salt_${params.accountId}`) || 
+                      (cleanPhone ? localStorage.getItem(`opay_pin_salt_${cleanPhone}`) : null) || 
+                      params.salt || 'OPAY_SECURE_NIGERIA_BANKING_SALT_2026';
 
     const targetHash = savedHash || params.expectedPinHash;
     if (targetHash) {
@@ -254,7 +300,10 @@ export async function verifyPinOnBackend(params: {
     }
 
     // If user has never set a custom PIN (still on original default seed), allow default demo PINs
-    const hasCustomLocalPin = Boolean(localStorage.getItem(`opay_pin_${params.accountId}`));
+    const hasCustomLocalPin = Boolean(
+      (cleanPhone && localStorage.getItem(`opay_pin_phone_${cleanPhone}`)) ||
+      localStorage.getItem(`opay_pin_${params.accountId}`)
+    );
     const isDefaultSeed = !hasCustomLocalPin && (!targetHash || targetHash === '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4');
     if (isDefaultSeed && (cleanPin === '1234' || cleanPin === '0000')) {
       return { success: true, verified: true, message: 'PIN verified.' };
@@ -274,6 +323,8 @@ export async function verifyPinOnBackend(params: {
 export async function updatePinOnBackend(params: {
   accountId: string;
   newPin: string;
+  phone?: string;
+  accountNumber?: string;
   currentPin?: string;
 }): Promise<{
   success: boolean;
@@ -282,21 +333,41 @@ export async function updatePinOnBackend(params: {
   message?: string;
 }> {
   const cleanPin = params.newPin.trim();
+  const cleanPhone = (params.phone || '').replace(/\D/g, '');
+  const last10Phone = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+  const cleanAccNum = (params.accountNumber || '').replace(/\D/g, '');
+
   const localSalt = `${Date.now()}_${Math.random().toString(36).substring(2)}`;
   const localHash = await clientSha256(`${localSalt}:${cleanPin}`);
 
-  // Save to client localStorage immediately for 100% offline & multi-day persistence
+  // Save to client localStorage immediately permanently tied to this phone and account
   try {
-    localStorage.setItem(`opay_pin_${params.accountId}`, cleanPin);
-    localStorage.setItem(`opay_pin_hash_${params.accountId}`, localHash);
-    localStorage.setItem(`opay_pin_salt_${params.accountId}`, localSalt);
+    if (params.accountId) localStorage.setItem(`opay_pin_${params.accountId}`, cleanPin);
+    if (cleanPhone) localStorage.setItem(`opay_pin_phone_${cleanPhone}`, cleanPin);
+    if (last10Phone) localStorage.setItem(`opay_pin_phone_${last10Phone}`, cleanPin);
+    if (cleanAccNum) localStorage.setItem(`opay_pin_acc_${cleanAccNum}`, cleanPin);
+
+    if (params.accountId) {
+      localStorage.setItem(`opay_pin_hash_${params.accountId}`, localHash);
+      localStorage.setItem(`opay_pin_salt_${params.accountId}`, localSalt);
+    }
+    if (cleanPhone) {
+      localStorage.setItem(`opay_pin_hash_${cleanPhone}`, localHash);
+      localStorage.setItem(`opay_pin_salt_${cleanPhone}`, localSalt);
+    }
   } catch {}
 
   try {
     const response = await fetch('/api/auth/update-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        accountId: params.accountId,
+        phone: params.phone,
+        accountNumber: params.accountNumber,
+        newPin: cleanPin,
+        currentPin: params.currentPin,
+      }),
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -306,8 +377,14 @@ export async function updatePinOnBackend(params: {
         const returnedHash = data.pinHash || localHash;
         const returnedSalt = data.pinSalt || localSalt;
         try {
-          localStorage.setItem(`opay_pin_hash_${params.accountId}`, returnedHash);
-          localStorage.setItem(`opay_pin_salt_${params.accountId}`, returnedSalt);
+          if (params.accountId) {
+            localStorage.setItem(`opay_pin_hash_${params.accountId}`, returnedHash);
+            localStorage.setItem(`opay_pin_salt_${params.accountId}`, returnedSalt);
+          }
+          if (cleanPhone) {
+            localStorage.setItem(`opay_pin_hash_${cleanPhone}`, returnedHash);
+            localStorage.setItem(`opay_pin_salt_${cleanPhone}`, returnedSalt);
+          }
         } catch {}
         return {
           success: true,

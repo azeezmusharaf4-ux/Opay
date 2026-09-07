@@ -1,4 +1,4 @@
-// Web Audio API sound effects for simulated transactions and notifications
+// Web Audio API sound effects for transactions and notifications
 class SoundManager {
   private ctx: AudioContext | null = null;
 

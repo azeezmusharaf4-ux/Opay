@@ -7,17 +7,17 @@ interface OPaySplashScreenProps {
 
 export const OPaySplashScreen: React.FC<OPaySplashScreenProps> = ({ 
   onFinish, 
-  duration = 2200 
+  duration = 500 
 }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    // Start smooth dissolve transition at 1700ms (matches video Frame 00:02)
+    // Start quick dissolve transition so the app is instantly ready
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
-    }, Math.max(duration - 500, 1400));
+    }, Math.max(duration - 200, 250));
 
-    // Remove from DOM after dissolve finishes (Frame 00:03)
+    // Remove from DOM quickly
     const finishTimer = setTimeout(() => {
       if (onFinish) {
         onFinish();

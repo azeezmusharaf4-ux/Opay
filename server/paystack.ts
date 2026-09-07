@@ -52,6 +52,8 @@ export interface PaystackTransferResult {
 }
 
 export class PaystackService {
+  private static resolveCache = new Map<string, PaystackResolveResult>();
+
   private static getSecretKey(): string | null {
     const key = process.env.PAYSTACK_SECRET_KEY?.trim();
     return key && key.length > 0 ? key : null;
@@ -80,6 +82,14 @@ export class PaystackService {
     accountNumber: string,
     bankCode: string
   ): Promise<PaystackResolveResult> {
+    const cleanAccount = accountNumber.trim().replace(/\D/g, '');
+    const cleanBankCode = bankCode.trim();
+    const cacheKey = `${cleanAccount}_${cleanBankCode}`;
+
+    if (this.resolveCache.has(cacheKey)) {
+      return this.resolveCache.get(cacheKey)!;
+    }
+
     const secret = this.getSecretKey();
     if (!secret) {
       return {
@@ -89,25 +99,29 @@ export class PaystackService {
     }
 
     try {
-      const cleanAccount = accountNumber.trim().replace(/\D/g, '');
-      const cleanBankCode = bankCode.trim();
-
       const url = `https://api.paystack.co/bank/resolve?account_number=${encodeURIComponent(cleanAccount)}&bank_code=${encodeURIComponent(cleanBankCode)}`;
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders(),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
       if (response.ok && data.status && data.data) {
-        return {
+        const result: PaystackResolveResult = {
           success: true,
           accountNumber: data.data.account_number || cleanAccount,
           accountName: (data.data.account_name || '').toUpperCase().trim(),
           bankId: data.data.bank_id,
         };
+        this.resolveCache.set(cacheKey, result);
+        return result;
       }
 
       return {

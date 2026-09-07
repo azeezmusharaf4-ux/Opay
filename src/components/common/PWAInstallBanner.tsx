@@ -115,7 +115,7 @@ export const PWAInstallBanner: React.FC = () => {
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-semibold text-white">Tap &quot;Add&quot; in the top right</p>
-                  <p className="text-slate-400">OPay will now appear on your home screen with the official app icon!</p>
+                  <p className="text-slate-400">OPay will now appear on your home screen with the official white and green icon!</p>
                 </div>
               </div>
             </div>

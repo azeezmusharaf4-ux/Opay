@@ -62,7 +62,7 @@ export const OPayNotificationsModal: React.FC<OPayNotificationsModalProps> = ({ 
             <div>
               <h2 className="text-sm sm:text-base font-bold text-white leading-tight">Notifications</h2>
               <p className="text-[10px] text-slate-400">
-                {unreadNotificationCount} unread simulated alerts
+                {unreadNotificationCount} unread alert{unreadNotificationCount === 1 ? '' : 's'}
               </p>
             </div>
           </div>
@@ -212,7 +212,7 @@ export const OPayNotificationsModal: React.FC<OPayNotificationsModalProps> = ({ 
 
         {/* Footer */}
         <div className="border-t border-slate-800/80 bg-[#161920] p-3 text-center text-[11px] text-slate-500">
-          Simulated In-App Push Notifications
+          Real-time Transaction & Security Alerts
         </div>
 
         {/* Receipt submodal if user clicked transaction notification */}

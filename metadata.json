@@ -1,6 +1,6 @@
 {
-  "name": "OPay Banking App",
-  "description": "OPay-style mobile banking web interface with identity verification, face liveness detection, secure 4-digit transaction PIN, transfers, cards, and banking services.",
+  "name": "OPay",
+  "description": "OPay - Beyond Banking. Seamless mobile money, transfers, bill payments, and smart savings.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

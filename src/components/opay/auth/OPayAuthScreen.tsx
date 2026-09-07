@@ -543,7 +543,7 @@ export const OPayAuthScreen: React.FC<OPayAuthScreenProps> = ({
     }
 
     if (cleanPass.length < 6) {
-      setRegError('Login password must be at least 6 characters with letters and numbers.');
+      setRegError('Login password must be at least 6 digits or characters.');
       return;
     }
 

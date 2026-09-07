@@ -18,10 +18,10 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[#08090C] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 antialiased">
-      {/* 1. App Startup Splash Screen matching IMG_2422.png */}
+      {/* 1. App Startup Splash Screen */}
       {showSplash && (
         <OPaySplashScreen 
-          duration={2200}
+          duration={500}
           onFinish={() => setShowSplash(false)} 
         />
       )}

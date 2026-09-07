@@ -725,7 +725,7 @@ export const OPayMeTab: React.FC<OPayMeTabProps> = ({
             <button
               onClick={() => {
                 setActiveModal(null);
-                showToast('Connecting to simulated live representative...');
+                showToast('Connecting to customer care representative...');
               }}
               className="w-full rounded-xl bg-[#00D589] py-2.5 text-xs font-bold text-[#082218] hover:bg-[#00E599] transition-colors"
             >

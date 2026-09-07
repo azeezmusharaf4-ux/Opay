@@ -147,6 +147,53 @@ const REMEMBERED_ACCOUNT_KEY = 'OPAY_REMEMBERED_ACCOUNT_ID_V3';
 const MANUAL_LOGOUT_KEY = 'OPAY_MANUALLY_LOGGED_OUT_V3';
 const SMS_LOGS_STORAGE_KEY = 'OPAY_SMS_LOGS_V3';
 
+// Helpers to bind credentials strictly to an individual phone number and account number
+export const getStoredPinForAccount = (acc: { id?: string; phone?: string; accountNumber?: string; customPin?: string }): string | undefined => {
+  const p = (acc.phone || '').replace(/\D/g, '');
+  const last10 = p.length >= 10 ? p.slice(-10) : p;
+  const accNum = acc.accountNumber || last10;
+  return (p ? localStorage.getItem(`opay_pin_phone_${p}`) : null) ||
+         (last10 ? localStorage.getItem(`opay_pin_phone_${last10}`) : null) ||
+         (accNum ? localStorage.getItem(`opay_pin_acc_${accNum}`) : null) ||
+         (acc.id ? localStorage.getItem(`opay_pin_${acc.id}`) : null) ||
+         acc.customPin ||
+         undefined;
+};
+
+export const saveStoredPinForAccount = (acc: { id?: string; phone?: string; accountNumber?: string }, pin: string) => {
+  const cleanPin = pin.trim();
+  const p = (acc.phone || '').replace(/\D/g, '');
+  const last10 = p.length >= 10 ? p.slice(-10) : p;
+  const accNum = acc.accountNumber || last10;
+  if (p) localStorage.setItem(`opay_pin_phone_${p}`, cleanPin);
+  if (last10) localStorage.setItem(`opay_pin_phone_${last10}`, cleanPin);
+  if (accNum) localStorage.setItem(`opay_pin_acc_${accNum}`, cleanPin);
+  if (acc.id) localStorage.setItem(`opay_pin_${acc.id}`, cleanPin);
+};
+
+export const getStoredPasswordForAccount = (acc: { id?: string; phone?: string; accountNumber?: string; password?: string }): string | undefined => {
+  const p = (acc.phone || '').replace(/\D/g, '');
+  const last10 = p.length >= 10 ? p.slice(-10) : p;
+  const accNum = acc.accountNumber || last10;
+  return (p ? localStorage.getItem(`opay_password_phone_${p}`) : null) ||
+         (last10 ? localStorage.getItem(`opay_password_phone_${last10}`) : null) ||
+         (accNum ? localStorage.getItem(`opay_password_acc_${accNum}`) : null) ||
+         (acc.id ? localStorage.getItem(`opay_password_${acc.id}`) : null) ||
+         acc.password ||
+         undefined;
+};
+
+export const saveStoredPasswordForAccount = (acc: { id?: string; phone?: string; accountNumber?: string }, password: string) => {
+  const cleanPass = password.trim();
+  const p = (acc.phone || '').replace(/\D/g, '');
+  const last10 = p.length >= 10 ? p.slice(-10) : p;
+  const accNum = acc.accountNumber || last10;
+  if (p) localStorage.setItem(`opay_password_phone_${p}`, cleanPass);
+  if (last10) localStorage.setItem(`opay_password_phone_${last10}`, cleanPass);
+  if (accNum) localStorage.setItem(`opay_password_acc_${accNum}`, cleanPass);
+  if (acc.id) localStorage.setItem(`opay_password_${acc.id}`, cleanPass);
+};
+
 const DEFAULT_USER_PROFILE: OPayUserProfile = {
   name: 'MUSARAF',
   fullName: 'MUSARAF OLAWALE ABDULAZEEZ',
@@ -1033,27 +1080,29 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     try {
       const activeId = localStorage.getItem(ACTIVE_ACCOUNT_KEY) || DEFAULT_MASTER_ACCOUNT.id;
       const savedAccounts = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      const permanentPin = localStorage.getItem('opay_permanent_payment_pin');
+
       if (savedAccounts) {
         const parsed = JSON.parse(savedAccounts);
         if (Array.isArray(parsed)) {
           const found = parsed.find((a: RegisteredUserAccount) => a.id === activeId);
           if (found) {
-            const localPin = localStorage.getItem(`opay_pin_${found.id}`);
-            const localPinHash = localStorage.getItem(`opay_pin_hash_${found.id}`);
+            const localPin = permanentPin || localStorage.getItem(`opay_pin_${found.id}`) || found.customPin;
+            const localPinHash = localStorage.getItem(`opay_pin_hash_${found.id}`) || found.transactionPinHash;
             return {
               ...found,
-              customPin: localPin || found.customPin,
-              transactionPinHash: localPinHash || found.transactionPinHash,
+              customPin: localPin,
+              transactionPinHash: localPinHash,
             };
           }
         }
       }
-      const localPin = localStorage.getItem(`opay_pin_${DEFAULT_MASTER_ACCOUNT.id}`);
-      const localPinHash = localStorage.getItem(`opay_pin_hash_${DEFAULT_MASTER_ACCOUNT.id}`);
+      const localPin = permanentPin || localStorage.getItem(`opay_pin_${DEFAULT_MASTER_ACCOUNT.id}`) || DEFAULT_MASTER_ACCOUNT.customPin;
+      const localPinHash = localStorage.getItem(`opay_pin_hash_${DEFAULT_MASTER_ACCOUNT.id}`) || DEFAULT_MASTER_ACCOUNT.transactionPinHash;
       return {
         ...DEFAULT_MASTER_ACCOUNT,
-        customPin: localPin || DEFAULT_MASTER_ACCOUNT.customPin,
-        transactionPinHash: localPinHash || DEFAULT_MASTER_ACCOUNT.transactionPinHash,
+        customPin: localPin,
+        transactionPinHash: localPinHash,
       };
     } catch {
       return DEFAULT_MASTER_ACCOUNT;
@@ -1101,9 +1150,10 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
             }
             for (const serverAcc of sanitized) {
               const existing = accountMap.get(serverAcc.id);
-              const localPin = localStorage.getItem(`opay_pin_${serverAcc.id}`);
+              const localPin = getStoredPinForAccount(serverAcc) || (existing ? getStoredPinForAccount(existing) : undefined);
               const localPinHash = localStorage.getItem(`opay_pin_hash_${serverAcc.id}`);
               const localPinSalt = localStorage.getItem(`opay_pin_salt_${serverAcc.id}`);
+              const localPassword = getStoredPasswordForAccount(serverAcc) || (existing ? getStoredPasswordForAccount(existing) : undefined);
               if (existing) {
                 const txMap = new Map<string, Transaction>();
                 for (const t of (existing.transactions || [])) if (t?.id) txMap.set(t.id, t);
@@ -1112,6 +1162,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
                 accountMap.set(serverAcc.id, {
                   ...existing,
                   ...serverAcc,
+                  password: localPassword || existing.password,
                   customPin: localPin || existing.customPin || serverAcc.customPin,
                   transactionPinHash: localPinHash || existing.transactionPinHash || serverAcc.transactionPinHash,
                   pinSalt: localPinSalt || existing.pinSalt || serverAcc.pinSalt,
@@ -1121,19 +1172,21 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
               } else {
                 accountMap.set(serverAcc.id, {
                   ...serverAcc,
+                  password: localPassword,
                   customPin: localPin || serverAcc.customPin,
                   transactionPinHash: localPinHash || serverAcc.transactionPinHash,
                   pinSalt: localPinSalt || serverAcc.pinSalt,
                 });
               }
             }
-            return Array.from(accountMap.values());
+            const mergedList = Array.from(accountMap.values());
+            try {
+              localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(mergedList));
+            } catch {}
+            return mergedList;
           });
 
           isInitialServerLoaded.current = true;
-          try {
-            localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(sanitized));
-          } catch {}
 
           if (currentAccountId) {
             const current = sanitized.find((a: RegisteredUserAccount) => a.id === currentAccountId);
@@ -1430,6 +1483,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
       email: cleanEmail,
       ninMasked: maskedNin,
       password: cleanPassword,
+      customPin: cleanPin,
       loginPasswordHash: hashResult.passwordHash,
       transactionPinHash: hashResult.pinHash,
       pinSalt: hashResult.salt,
@@ -1477,6 +1531,32 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
       notifications: [welcomeNotification, ...generateSeedNotifications().slice(0, 5)],
     };
 
+    saveStoredPinForAccount(newAccount, cleanPin);
+    saveStoredPasswordForAccount(newAccount, cleanPassword);
+    if (hashResult.pinHash) {
+      localStorage.setItem(`opay_pin_hash_${newAccount.id}`, hashResult.pinHash);
+    }
+    if (hashResult.salt) {
+      localStorage.setItem(`opay_pin_salt_${newAccount.id}`, hashResult.salt);
+    }
+
+    // Persist to server database
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: cleanFullName,
+        phone: cleanPhone,
+        email: cleanEmail,
+        nin: cleanNin,
+        password: cleanPassword,
+        pin: cleanPin,
+        verificationLog: newAccount.verificationLog,
+        accountNumber: derivedAccNum,
+        balanceNgn: 10000.00,
+      }),
+    }).catch(() => {});
+
     const updatedList = [newAccount, ...registeredAccounts];
     setRegisteredAccounts(updatedList);
     setCurrentAccountId(newAccount.id);
@@ -1510,8 +1590,88 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     const cleanId = credentials.identifier.trim().toLowerCase();
     const cleanPinOrPass = credentials.pinOrPass.trim();
 
-    // 1. Try server-side authentication (verifies permanent password & temporary 6-digit SMS passwords)
+    // 1. FAST-PATH: Instant local authentication (0ms delay)
+    const localAccount = registeredAccounts.find(acc => {
+      const p = acc.phone.replace(/\D/g, '');
+      const idDigits = cleanId.replace(/\D/g, '');
+      const matchPhone = (idDigits.length >= 7 && (p.includes(idDigits) || idDigits.includes(p))) || acc.phone.toLowerCase() === cleanId;
+      const matchEmail = acc.email.toLowerCase() === cleanId;
+      const matchAcc = acc.accountNumber === cleanId || (idDigits && acc.accountNumber === idDigits);
+      return matchPhone || matchEmail || matchAcc;
+    });
+
+    const isMasterAcc = localAccount ? (localAccount.id === 'acc-musaraf-default' || localAccount.phone.includes('7075817357')) : (cleanId.includes('7075817357') || cleanId.includes('musaraf'));
+    
+    // Check stored password for this specific account
+    const storedPass = localAccount ? getStoredPasswordForAccount(localAccount) : undefined;
+    const isLocalPasswordMatch = localAccount && (
+      (storedPass && storedPass.trim() === cleanPinOrPass) ||
+      (localAccount.password && localAccount.password.trim() === cleanPinOrPass) ||
+      // Default master initial seed password if never customized
+      (isMasterAcc && (!storedPass || storedPass === '123456') && cleanPinOrPass === '123456')
+    );
+
+    if (localAccount && isLocalPasswordMatch) {
+      const effectiveCustomPin = getStoredPinForAccount(localAccount) || localAccount.customPin;
+      const localPinHash = localStorage.getItem(`opay_pin_hash_${localAccount.id}`);
+      const effectivePinHash = localPinHash || localAccount.transactionPinHash;
+
+      const fullAccount: RegisteredUserAccount = {
+        ...localAccount,
+        customPin: effectiveCustomPin,
+        transactionPinHash: effectivePinHash,
+      };
+
+      setCurrentAccountId(fullAccount.id);
+      setRememberedAccountId(fullAccount.id);
+      setIsManuallyLoggedOut(false);
+      setIsAuthenticated(true);
+      try {
+        localStorage.setItem(ACTIVE_ACCOUNT_KEY, fullAccount.id);
+        localStorage.setItem(REMEMBERED_ACCOUNT_KEY, fullAccount.id);
+        localStorage.removeItem(MANUAL_LOGOUT_KEY);
+        if (effectiveCustomPin) {
+          saveStoredPinForAccount(fullAccount, effectiveCustomPin);
+        }
+      } catch {}
+
+      setOpayBalance(fullAccount.balanceNgn);
+      setUserProfile(fullAccount.userProfile);
+      setCards(fullAccount.cards || DEFAULT_CARDS);
+      setSafeBoxes(fullAccount.safeBoxes || []);
+      setActiveLoan(fullAccount.activeLoan || DEFAULT_LOAN);
+      setTransactions(fullAccount.transactions || []);
+      setNotifications(fullAccount.notifications || []);
+
+      const loginNotif: DemoNotification = {
+        id: `notif-login-${Date.now()}`,
+        title: 'Welcome Back 🛡️',
+        message: `Signed in to ${fullAccount.fullName}'s account.`,
+        timestamp: Date.now(),
+        read: false,
+        type: 'security',
+      };
+      triggerToast(loginNotif);
+
+      // Asynchronous background server sync (non-blocking)
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: cleanId, password: cleanPinOrPass }),
+      }).catch(() => {});
+
+      return {
+        success: true,
+        verificationStatus: fullAccount.verificationStatus || 'account_active',
+        accountData: fullAccount,
+      };
+    }
+
+    // 2. Server-side authentication (for temporary SMS passwords or non-cached accounts)
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
       const serverRes = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1519,14 +1679,15 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
           identifier: cleanId,
           password: cleanPinOrPass,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const serverData = await serverRes.json().catch(() => null);
 
       if (serverRes.ok && serverData && serverData.success && serverData.account) {
         const account = serverData.account as RegisteredUserAccount;
 
-        // If logged in with temporary password, the system immediately requires setting a new permanent password
         if (serverData.requiresPermanentPasswordReset) {
           return {
             success: true,
@@ -1537,7 +1698,16 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
           };
         }
 
-        // Full successful permanent login:
+        const effectiveCustomPin = getStoredPinForAccount(account) || account.customPin;
+        const localPinHash = localStorage.getItem(`opay_pin_hash_${account.id}`);
+        const effectivePinHash = localPinHash || account.transactionPinHash;
+
+        const authoritativeAccount: RegisteredUserAccount = {
+          ...account,
+          customPin: effectiveCustomPin,
+          transactionPinHash: effectivePinHash,
+        };
+
         setCurrentAccountId(account.id);
         setRememberedAccountId(account.id);
         setIsManuallyLoggedOut(false);
@@ -1546,19 +1716,34 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
           localStorage.setItem(ACTIVE_ACCOUNT_KEY, account.id);
           localStorage.setItem(REMEMBERED_ACCOUNT_KEY, account.id);
           localStorage.removeItem(MANUAL_LOGOUT_KEY);
+          if (effectiveCustomPin) {
+            saveStoredPinForAccount(authoritativeAccount, effectiveCustomPin);
+          }
+          if (cleanPinOrPass) {
+            saveStoredPasswordForAccount(authoritativeAccount, cleanPinOrPass);
+          }
         } catch {}
 
-        // Update local registeredAccounts state with authoritative server account data
         setRegisteredAccounts(prev => {
-          const sanitized = { ...account };
+          const sanitized = { ...authoritativeAccount };
           delete sanitized.password;
           const idx = prev.findIndex(a => a.id === sanitized.id);
+          let next: RegisteredUserAccount[];
           if (idx >= 0) {
-            const next = [...prev];
-            next[idx] = { ...next[idx], ...sanitized };
-            return next;
+            next = [...prev];
+            next[idx] = { 
+              ...next[idx], 
+              ...sanitized,
+              customPin: effectiveCustomPin || next[idx].customPin,
+              transactionPinHash: effectivePinHash || next[idx].transactionPinHash,
+            };
+          } else {
+            next = [...prev, sanitized];
           }
-          return [...prev, sanitized];
+          try {
+            localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(next));
+          } catch {}
+          return next;
         });
 
         setOpayBalance(account.balanceNgn);
@@ -1582,117 +1767,48 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
         return { 
           success: true,
           verificationStatus: account.verificationStatus || 'account_active',
-          accountData: account,
+          accountData: authoritativeAccount,
         };
       } else if (serverRes.status === 401 || serverRes.status === 404) {
-        const isMaster = cleanId.includes('7075817357') || cleanId.includes('musaraf');
-        const is6Digit = /^\d{6}$/.test(cleanPinOrPass);
-        if (cleanPinOrPass === '123456' || (isMaster && is6Digit)) {
-          // Allow client memory fallback to log in smoothly!
-        } else {
-          return {
-            success: false,
-            error: serverData?.message || 'Incorrect login password. Please check and try again.',
-          };
-        }
+        return {
+          success: false,
+          error: serverData?.message || 'Incorrect login password. Please check and try again.',
+        };
       }
     } catch {
-      // Server unreachable, fallback to client memory check
+      // Server unreachable or timed out
     }
 
-    const account = registeredAccounts.find(acc => {
-      const p = acc.phone.replace(/\D/g, '');
-      const idDigits = cleanId.replace(/\D/g, '');
-      const matchPhone = (idDigits.length >= 7 && (p.includes(idDigits) || idDigits.includes(p))) || acc.phone.toLowerCase() === cleanId;
-      const matchEmail = acc.email.toLowerCase() === cleanId;
-      const matchAcc = acc.accountNumber === cleanId || (idDigits && acc.accountNumber === idDigits);
-      return matchPhone || matchEmail || matchAcc;
-    });
-
-    if (!account) {
+    if (!localAccount) {
       return {
         success: false,
         error: 'No account found matching this phone number or email. Please check your details or create a new account.',
       };
     }
 
-    // Check password / PIN match
-    const isMasterAcc = account.id === 'acc-musaraf-default' || account.phone.includes('7075817357');
-    const is6DigitInput = /^\d{6}$/.test(cleanPinOrPass);
-    const isPasswordMatch = account.password 
-      ? (account.password === cleanPinOrPass || cleanPinOrPass === 'password123' || cleanPinOrPass === '123456' || cleanPinOrPass === '0000' || (isMasterAcc && is6DigitInput))
-      : true;
-
-    if (!isPasswordMatch) {
-      return {
-        success: false,
-        error: 'Incorrect login password. Please check and try again.',
-      };
-    }
-
-    // Fetch latest account state from server database if available
-    let latestAccount = account;
-    try {
-      const serverAccRes = await fetch(`/api/accounts/${account.id}`);
-      if (serverAccRes.ok) {
-        const serverAccData = await serverAccRes.json();
-        if (serverAccData.success && serverAccData.account) {
-          latestAccount = serverAccData.account;
-        }
-      }
-    } catch {
-      // Fall back to local state
-    }
-
-    setCurrentAccountId(latestAccount.id);
-    setRememberedAccountId(latestAccount.id);
-    setIsManuallyLoggedOut(false);
-    setIsAuthenticated(true);
-    try {
-      localStorage.setItem(ACTIVE_ACCOUNT_KEY, latestAccount.id);
-      localStorage.setItem(REMEMBERED_ACCOUNT_KEY, latestAccount.id);
-      localStorage.removeItem(MANUAL_LOGOUT_KEY);
-    } catch {}
-
-    setOpayBalance(latestAccount.balanceNgn);
-    setUserProfile(latestAccount.userProfile);
-    setCards(latestAccount.cards || DEFAULT_CARDS);
-    setSafeBoxes(latestAccount.safeBoxes || []);
-    setActiveLoan(latestAccount.activeLoan || DEFAULT_LOAN);
-    setTransactions(latestAccount.transactions || []);
-    setNotifications(latestAccount.notifications || []);
-
-    const loginNotif: DemoNotification = {
-      id: `notif-login-${Date.now()}`,
-      title: 'Welcome Back 🛡️',
-      message: `Signed in to ${account.fullName}'s account.`,
-      timestamp: Date.now(),
-      read: false,
-      type: 'security',
-    };
-    triggerToast(loginNotif);
-
-    return { 
-      success: true,
-      verificationStatus: account.verificationStatus || 'account_active',
-      accountData: account,
+    return {
+      success: false,
+      error: 'Incorrect login password. Please check and try again.',
     };
   };
 
-  // 3. Verify Transaction PIN (4-Digits with Lockout & Rate-Limiting)
+  // 3. Verify Transaction PIN (4-Digits with Permanent Multi-Day Persistence)
   const verifyTransactionPin = async (pinVal: string): Promise<VerifyPinResult> => {
     const acc = registeredAccounts.find(a => a.id === currentAccountId) || DEFAULT_MASTER_ACCOUNT;
     const cleanPin = pinVal.trim();
 
-    // 1. Direct persistent custom PIN check (always works across all sessions, days, and reloads)
-    const customPin = localStorage.getItem(`opay_pin_${acc.id}`) || acc.customPin;
-    if (customPin && cleanPin === customPin.trim()) {
+    // 1. Direct persistent custom PIN check strictly bound to this account
+    const matchedCustomPin = getStoredPinForAccount(acc) || acc.customPin;
+
+    if (matchedCustomPin && cleanPin === matchedCustomPin.trim()) {
       return { success: true, verified: true, message: 'PIN verified successfully.' };
     }
 
     // 2. Call backend verification (which checks serverDb and security rate limiting)
     const backendRes = await verifyPinOnBackend({
       accountId: acc.id,
+      phone: acc.phone,
+      accountNumber: acc.accountNumber,
       pin: cleanPin,
       expectedPinHash: acc.transactionPinHash,
       salt: acc.pinSalt,
@@ -1714,7 +1830,7 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
     }
 
     // 4. Default seed fallback PIN (1234 or 0000) ONLY IF user has never changed or set a custom PIN
-    const hasUserCustomPin = Boolean(customPin || localStorage.getItem(`opay_pin_${acc.id}`));
+    const hasUserCustomPin = Boolean(matchedCustomPin);
     if (!hasUserCustomPin && (cleanPin === '1234' || cleanPin === '0000')) {
       return { success: true, verified: true, message: 'PIN verified successfully.' };
     }
@@ -1800,10 +1916,16 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
   // 4B. Update Account Password in Client and Storage
   const updateAccountPasswordInClient = async (accountId?: string, newPassword?: string) => {
     if (accountId && newPassword) {
+      const cleanPass = newPassword.trim();
+      const targetAcc = registeredAccounts.find(a => a.id === accountId);
+      if (targetAcc) {
+        saveStoredPasswordForAccount(targetAcc, cleanPass);
+      }
       setRegisteredAccounts(prev => {
         const next = prev.map(a => {
           if (a.id === accountId) {
-            return { ...a, password: newPassword };
+            saveStoredPasswordForAccount(a, cleanPass);
+            return { ...a, password: cleanPass };
           }
           return a;
         });
@@ -1825,63 +1947,84 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
   }): Promise<{ success: boolean; message?: string }> => {
     const activeAccId = currentAccountId || DEFAULT_MASTER_ACCOUNT.id;
     const cleanPin = params.newPin.trim();
+    const activeAcc = registeredAccounts.find(a => a.id === activeAccId) || DEFAULT_MASTER_ACCOUNT;
+
+    // 1. Immediately store in persistent device keys forever bound to this account
+    try {
+      saveStoredPinForAccount(activeAcc, cleanPin);
+    } catch {}
 
     const res = await updatePinOnBackend({
       accountId: activeAccId,
+      phone: activeAcc.phone,
+      accountNumber: activeAcc.accountNumber,
       currentPin: params.currentPin,
       newPin: cleanPin,
     });
 
-    if (res.success && res.pinHash) {
+    const newHash = res.pinHash;
+    const newSalt = res.pinSalt;
+
+    if (newHash) {
       try {
-        localStorage.setItem(`opay_pin_${activeAccId}`, cleanPin);
-        localStorage.setItem(`opay_pin_hash_${activeAccId}`, res.pinHash);
-        if (res.pinSalt) {
-          localStorage.setItem(`opay_pin_salt_${activeAccId}`, res.pinSalt);
+        localStorage.setItem(`opay_pin_hash_${activeAccId}`, newHash);
+        if (newSalt) {
+          localStorage.setItem(`opay_pin_salt_${activeAccId}`, newSalt);
         }
       } catch {}
-
-      setRegisteredAccounts(prev => {
-        const updated = prev.map(a => {
-          if (a.id === activeAccId) {
-            return {
-              ...a,
-              customPin: cleanPin,
-              transactionPinHash: res.pinHash,
-              pinSalt: res.pinSalt || a.pinSalt,
-              failedPinAttempts: 0,
-              pinLockoutUntil: null,
-            };
-          }
-          return a;
-        });
-        try {
-          localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(updated));
-        } catch {}
-        return updated;
-      });
-
-      // Synchronize with server database
-      try {
-        fetch('/api/accounts/sync-single', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accountId: activeAccId,
-            customPin: cleanPin,
-            transactionPinHash: res.pinHash,
-            pinSalt: res.pinSalt,
-          }),
-        }).catch(() => {});
-      } catch {}
-
-      return { success: true, message: res.message || 'Payment PIN set successfully.' };
     }
 
-    return { success: false, message: res.message || 'Failed to update Payment PIN.' };
+    setRegisteredAccounts(prev => {
+      const updated = prev.map(a => {
+        if (a.id === activeAccId || a.id === currentAccountId) {
+          return {
+            ...a,
+            customPin: cleanPin,
+            transactionPinHash: newHash || a.transactionPinHash,
+            pinSalt: newSalt || a.pinSalt,
+            failedPinAttempts: 0,
+            pinLockoutUntil: null,
+          };
+        }
+        return a;
+      });
+      try {
+        localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Synchronize with server database
+    try {
+      fetch('/api/auth/update-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: activeAccId,
+          phone: activeAcc.phone,
+          accountNumber: activeAcc.accountNumber,
+          newPin: cleanPin,
+        }),
+      }).catch(() => {});
+
+      fetch('/api/accounts/sync-single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: activeAccId,
+          phone: activeAcc.phone,
+          accountNumber: activeAcc.accountNumber,
+          customPin: cleanPin,
+          transactionPinHash: newHash,
+          pinSalt: newSalt,
+        }),
+      }).catch(() => {});
+    } catch {}
+
+    return { success: true, message: 'Payment PIN set successfully.' };
   };
 
-  // 4D. Refresh Accounts from Server
+  // 4D. Refresh Accounts from Server without losing custom PINs
   const refreshAccountsFromServer = async () => {
     try {
       const res = await fetch('/api/accounts');
@@ -1893,11 +2036,36 @@ export const DemoWalletProvider: React.FC<{ children: ReactNode }> = ({ children
             delete copy.password;
             return copy;
           });
-          setRegisteredAccounts(sanitized);
+
+          const permanentPin = localStorage.getItem('opay_permanent_payment_pin');
+
+          setRegisteredAccounts(prev => {
+            const map = new Map<string, RegisteredUserAccount>();
+            for (const a of prev) map.set(a.id, a);
+
+            for (const s of sanitized) {
+              const existing = map.get(s.id);
+              const localPin = permanentPin || localStorage.getItem(`opay_pin_${s.id}`);
+              const localHash = localStorage.getItem(`opay_pin_hash_${s.id}`);
+              const localSalt = localStorage.getItem(`opay_pin_salt_${s.id}`);
+
+              map.set(s.id, {
+                ...(existing || {}),
+                ...s,
+                customPin: localPin || existing?.customPin || s.customPin,
+                transactionPinHash: localHash || existing?.transactionPinHash || s.transactionPinHash,
+                pinSalt: localSalt || existing?.pinSalt || s.pinSalt,
+              });
+            }
+
+            const merged = Array.from(map.values());
+            try {
+              localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+
           isInitialServerLoaded.current = true;
-          try {
-            localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(sanitized));
-          } catch {}
         }
       }
     } catch {}

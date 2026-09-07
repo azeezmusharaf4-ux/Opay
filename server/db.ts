@@ -373,16 +373,21 @@ class ServerDatabase {
         }
         const mergedTxs = Array.from(txMap.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        // Merge client updates (cards, safeboxes, transactions) while strictly preserving server credentials
+        // Merge client updates (cards, safeboxes, transactions) while preserving credentials and updating PIN when provided
+        const effectivePinHash = incoming.transactionPinHash || existing.transactionPinHash;
+        const effectivePinSalt = incoming.pinSalt || existing.pinSalt;
+        const effectiveCustomPin = incoming.customPin || existing.customPin;
+
         this.db.accounts[existingIdx] = {
           ...incoming,
           transactions: mergedTxs,
-          loginPasswordHash: existing.loginPasswordHash,
-          passwordSalt: existing.passwordSalt,
-          pinSalt: existing.pinSalt,
-          transactionPinHash: existing.transactionPinHash,
-          failedPinAttempts: existing.failedPinAttempts,
-          pinLockoutUntil: existing.pinLockoutUntil,
+          loginPasswordHash: incoming.loginPasswordHash || existing.loginPasswordHash,
+          passwordSalt: incoming.passwordSalt || existing.passwordSalt,
+          pinSalt: effectivePinSalt,
+          transactionPinHash: effectivePinHash,
+          customPin: effectiveCustomPin,
+          failedPinAttempts: 0,
+          pinLockoutUntil: null,
           tempPassword: existing.tempPassword,
           tempPasswordExpiresAt: existing.tempPasswordExpiresAt,
         };
